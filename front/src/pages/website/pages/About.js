@@ -1,60 +1,62 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 
 const About = () => {
   return (
-    <main className="main">
+    <section id="get-started" className="get-started section">
+      <div className="container">
+        <div className="row justify-content-between gy-4">
 
-      {/* Hero Section */}
-      <section id="hero" className="hero section dark-background">
+          {/* Left content */}
+          <div className="col-lg-6 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="100">
+            <div className="content">
+              <h3>About ShipAfrik</h3>
+              <p>
+                ShipAfrik is a cutting-edge platform designed to streamline the shipping process across Africa. Our goal is to provide a seamless experience for users to compare shipping options, book shipments, and track deliveries in real-time.
+              </p>
+              <p>
+                Our platform integrates user-friendly interfaces with powerful tools for both customers and shippers, ensuring efficient and transparent logistics solutions. With ShipAfrik, managing your shipping needs has never been easier.
+              </p>
+            </div>
+          </div>
 
-        <div className="info d-flex align-items-center">
-          <div className="container">
-            <div className="row justify-content-center" data-aos="fade-up" data-aos-delay="100">
-              <div className="col-lg-6 text-center">
-                <h2>Welcome to UpConstruction</h2>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                <Link to="#get-started" className="btn-get-started">Get Started</Link>
+          {/* Right form */}
+          <div className="col-lg-5" data-aos="zoom-out" data-aos-delay="200">
+            <form action="forms/quote.php" method="post" className="php-email-form">
+              <h3>Request a Quote</h3>
+              <p>Fill out the form below to get a customized shipping quote. Our team will get back to you with detailed information and options tailored to your needs.</p>
+              <div className="row gy-3">
+
+                <div className="col-12">
+                  <input type="text" name="name" className="form-control" placeholder="Name" required />
+                </div>
+
+                <div className="col-12">
+                  <input type="email" className="form-control" name="email" placeholder="Email" required />
+                </div>
+
+                <div className="col-12">
+                  <input type="text" className="form-control" name="phone" placeholder="Phone" required />
+                </div>
+
+                <div className="col-12">
+                  <textarea className="form-control" name="message" rows="6" placeholder="Message" required></textarea>
+                </div>
+
+                <div className="col-12 text-center">
+                  <div className="loading">Loading</div>
+                  <div className="error-message"></div>
+                  <div className="sent-message">Your quote request has been sent successfully. Thank you!</div>
+                  <button type="submit">Get a Quote</button>
+                </div>
+
               </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="hero-carousel" className="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
-          
-          <div className="carousel-inner">
-            <div className="carousel-item">
-              <img src="assets/img/hero-carousel/hero-carousel-1.jpg" alt="Carousel slide 1" />
-            </div>
-            <div className="carousel-item active">
-              <img src="assets/img/hero-carousel/hero-carousel-2.jpg" alt="Carousel slide 2" />
-            </div>
-            <div className="carousel-item">
-              <img src="assets/img/hero-carousel/hero-carousel-3.jpg" alt="Carousel slide 3" />
-            </div>
-            <div className="carousel-item">
-              <img src="assets/img/hero-carousel/hero-carousel-4.jpg" alt="Carousel slide 4" />
-            </div>
-            <div className="carousel-item">
-              <img src="assets/img/hero-carousel/hero-carousel-5.jpg" alt="Carousel slide 5" />
-            </div>
+            </form>
           </div>
 
-          <a className="carousel-control-prev" href="#hero-carousel" role="button" data-bs-slide="prev" aria-label="Previous">
-            <span className="carousel-control-prev-icon bi bi-chevron-left" aria-hidden="true"></span>
-          </a>
-
-          <a className="carousel-control-next" href="#hero-carousel" role="button" data-bs-slide="next" aria-label="Next">
-            <span className="carousel-control-next-icon bi bi-chevron-right" aria-hidden="true"></span>
-          </a>
-
         </div>
-
-      </section>
-      {/* /Hero Section */}
-
-    </main>
+      </div>
+    </section>
   );
-}
+};
 
 export default About;

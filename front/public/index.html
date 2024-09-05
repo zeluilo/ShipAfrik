@@ -2,36 +2,161 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/logo.png" />
+    <link rel="icon" href="assets/img/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-  <!-- Favicons -->
-  <link href="assets/img/logo.png" rel="icon">
-  <link href="/logo.png" rel="apple-touch-icon">
+    <meta name="description" content="ShipAfrik Website" />
 
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com" rel="preconnect">
-  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <!-- Favicons -->
+    <link href="assets/img/logo.png" rel="icon" title="Favicon">
+    <link href="assets/img/logo.png" rel="apple-touch-icon" title="Apple Touch Icon">
 
-  <!-- Vendor CSS Files -->
-  <link href="/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="/assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
-  <link href="/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;400;700&family=Poppins:wght@300;600;900&display=swap" rel="stylesheet">
 
-  <!-- Main CSS File -->
-  <link href="/assets/css/main.css" rel="stylesheet">
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet" />
+    <link href="assets/vendor/aos/aos.css" rel="stylesheet" />
+    <link href="assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+    <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet" />
+    <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet" />
+
+    <!-- Main CSS File -->
+    <link href="assets/css/main.css" rel="stylesheet" />
     <title>ShipAfrik</title>
   </head>
-  <body class="index-page">
+  <body class="index-page" data-aos-easing="ease-in-out" data-aos-duration="600" data-aos-delay="0">
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+
+    <!-- Main Script File -->
+    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js" defer></script>
+    <script src="assets/vendor/aos/aos.js" defer></script>
+    <script src="assets/vendor/glightbox/js/glightbox.min.js" defer></script>
+    <script src="assets/vendor/swiper/swiper-bundle.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@srexi/purecounterjs@1.1.0/dist/purecounter_vanilla.js" defer></script>
+
+
+    <script>
+      (function() {
+        "use strict";
+
+        /**
+         * Toggle 'scrolled' class on body when scrolling
+         */
+        function toggleScrolled() {
+          const body = document.querySelector('body');
+          const header = document.querySelector('#header');
+          if (!header || (!header.classList.contains('scroll-up-sticky') && !header.classList.contains('sticky-top') && !header.classList.contains('fixed-top'))) return;
+          window.scrollY > 100 ? body.classList.add('scrolled') : body.classList.remove('scrolled');
+        }
+
+        /**
+         * Mobile navigation toggle function
+         */
+        const mobileNavToggleBtn = document.querySelector('.mobile-nav-toggle');
+        function toggleMobileNav() {
+          document.querySelector('body').classList.toggle('mobile-nav-active');
+          mobileNavToggleBtn.classList.toggle('bi-list');
+          mobileNavToggleBtn.classList.toggle('bi-x');
+        }
+
+        /**
+         * Close mobile navigation on click (same-page links)
+         */
+        document.querySelectorAll('#navmenu a').forEach(navmenu => {
+          navmenu.addEventListener('click', () => {
+            if (document.querySelector('.mobile-nav-active')) {
+              toggleMobileNav();
+            }
+          });
+        });
+
+        /**
+         * Mobile navigation dropdown toggle
+         */
+        document.querySelectorAll('.navmenu .toggle-dropdown').forEach(navmenu => {
+          navmenu.addEventListener('click', function(e) {
+            e.preventDefault();
+            this.parentNode.classList.toggle('active');
+            this.parentNode.nextElementSibling.classList.toggle('dropdown-active');
+            e.stopImmediatePropagation();
+          });
+        });
+
+        /**
+         * Remove preloader after window load
+         */
+        const preloader = document.querySelector('#preloader');
+        if (preloader) {
+          window.addEventListener('load', () => preloader.remove());
+        }
+
+        /**
+         * Scroll to top button visibility and action
+         */
+        const scrollTopBtn = document.querySelector('.scroll-top');
+        function toggleScrollTop() {
+          if (scrollTopBtn) {
+            window.scrollY > 100 ? scrollTopBtn.classList.add('active') : scrollTopBtn.classList.remove('active');
+          }
+        }
+        if (scrollTopBtn) {
+          scrollTopBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({
+              top: 0,
+              behavior: 'smooth'
+            });
+          });
+        }
+
+        /**
+         * Initialize AOS (Animate on Scroll)
+         */
+        function initAOS() {
+          AOS.init({
+            duration: 600,
+            easing: 'ease-in-out',
+            once: true,
+            mirror: false
+          });
+        }
+
+        /**
+         * Initialize Swiper sliders
+         */
+        function initSwiper() {
+          document.querySelectorAll('.init-swiper').forEach(swiperElement => {
+            const config = JSON.parse(swiperElement.querySelector('.swiper-config').innerHTML.trim());
+            new Swiper(swiperElement, config);
+          });
+        }
+
+        /**
+         * Initialize all events after window load
+         */
+        window.addEventListener('load', () => {
+          toggleScrolled();
+          toggleScrollTop();
+          initAOS();
+          initSwiper();
+         <!-- new PureCounter();  -->
+        });
+
+        document.addEventListener('scroll', () => {
+          toggleScrolled();
+          toggleScrollTop();
+        });
+      })();
+    </script>
+
+      <!-- Scroll Top -->
+
+  <!-- Preloader -->
+  <!-- <div id="preloader"></div> -->
   </body>
 </html>
