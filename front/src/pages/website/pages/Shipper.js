@@ -15,15 +15,15 @@ const Shipper = () => {
     documents: null
   });
 
-  const { isLoggedIn } = useAuth();
-  const navigate = useNavigate();
+//   const { isLoggedIn } = useAuth();
+//   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      navigate('/login');
-      console.log('Logged IN: ', isLoggedIn);
-    }
-  }, [isLoggedIn, navigate]);
+// //   useEffect(() => {
+//     // if (!isLoggedIn) {
+//     //   navigate('/login');
+//     //   console.log('Logged IN: ', isLoggedIn);
+//     // }
+// //   }, [isLoggedIn, navigate]);
 
   // Handle form input changes
   const handleChange = (e) => {
