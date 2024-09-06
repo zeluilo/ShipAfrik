@@ -31,45 +31,57 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     // Validate password and passwordConfirmation match
     if (form.password !== form.passwordConfirmation) {
       toast.error('Passwords do not match');
       return;
     }
-
+  
     // Validate password criteria
     if (!validatePassword(form.password)) {
       toast.error('Password must be more than 8 characters and include at least one number');
       return;
     }
-
+  
     try {
       const payload = {
         ...form,
         userType: 'USER', // Include userType if required by your server
       };
-
+  
       console.log('Submitting registration form with data:', payload); // Log the form data
-
-      const response = await axios.post('https://localhost:3001/shipafrik/register', payload, {
+  
+      const response = await axios.post('http://localhost:3001/shipafrik/register', payload, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
-
+  
       console.log('Response from server:', response.data); // Log server response
-
-      if (response.data.message.includes('successfully')) {
-        toast.success('Registration successful!');
+  
+      // Handle response based on status code
+      if (response.status === 201) { // Created
+        toast.success(response.data.message || 'Registration successful!');
+      } else if (response.status === 400) { // Bad Request
+        toast.error(response.data.message || 'Error with registration details.');
       } else {
-        toast.error(response.data.message);
+        toast.error('An unexpected error occurred. Please try again.');
       }
     } catch (error) {
       console.error('Error registering Customer:', error);
-      toast.error('Error registering Customer. Please try again.');
+  
+      // Handle different types of errors
+      if (error.response) {
+        toast.error(error.response.data.message || 'Error registering Customer. Please try again.');
+      } else if (error.request) {
+        toast.error('No response received from server. Please try again.');
+      } else {
+        toast.error('An unexpected error occurred. Please try again.');
+      }
     }
   };
+  
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);

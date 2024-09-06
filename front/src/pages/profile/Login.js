@@ -1,21 +1,78 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../components/Context';
+import { toast } from 'react-toastify';
+import axios from 'axios';
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const { login, setCurrentUser, setAuthData } = useAuth();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle the login logic here
-    console.log({ email, password, rememberMe });
+    // Validate email format
+    const { email, password } = formData;
+
+    // Check if email or password is empty
+    if (!email || !password) {
+      setErrorMessage('Please enter both email and password.');
+      setShowErrorAlert(true);
+      toast.error('Please enter both email and password.');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMessage('Enter a valid email address.');
+      setShowErrorAlert(true);
+      toast.error('Invalid email format.');
+      return;
+    }
+
+    try {
+      console.log('Attempting login...');
+
+      // Authenticate user with server
+      const response = await axios.post('http://localhost:3001/shipafrik/login', { email, password });
+      console.log('Response: ', response.data);
+
+      const { token, user } = response.data;
+      console.log('User:', user);
+      console.log('Token:', token);
+      // Handle successful login
+      setCurrentUser(user);
+
+      // Set token expiration
+      const tokenValidityPeriodInMillis = 3600000; // 1 hour in milliseconds
+      const tokenCreationTime = new Date().getTime(); // Current time
+      const tokenExpiration = tokenCreationTime + tokenValidityPeriodInMillis;
+      login(user, token, tokenExpiration);
+      setAuthData({ user, token, tokenExpiration });
+
+      toast.success('Logged in successfully!');
+      navigate('/', { state: { successMessage: 'Logged in successfully!' } });
+    } catch (error) {
+      console.error('Error during login:', error);
+      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+      setErrorMessage(errorMessage);
+      setShowErrorAlert(true);
+      toast.warn(errorMessage);
+    }
   };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
 
   return (
     <section className="bg-dark min-vh-100 d-flex align-items-center">
@@ -61,8 +118,8 @@ function Login() {
                           name="email"
                           id="email"
                           placeholder="name@example.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          value={formData.email}
+                          onChange={handleChange}
                           required
                         />
                         <label htmlFor="email" className="form-label">Email</label>
@@ -76,8 +133,8 @@ function Login() {
                           name="password"
                           id="password"
                           placeholder="Password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
+                          value={formData.password}
+                          onChange={handleChange}
                           required
                         />
                         <label htmlFor="password" className="form-label">Password</label>
