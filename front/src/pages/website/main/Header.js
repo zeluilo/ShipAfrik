@@ -24,14 +24,14 @@ function Header() {
     console.log('Current User Details:', currentUser);
   }, [currentUser]);
 
-  useEffect(() => {
-    console.log('isLoggedIn:', isLoggedIn);
-    console.log('location.pathname:', location.pathname);
-    if (!isLoggedIn && location.pathname !== '/login') {
-      console.log('Redirecting to /login');
-      navigate('/');
-    }
-  }, [isLoggedIn, location.pathname, navigate]);
+  // useEffect(() => {
+  //   console.log('isLoggedIn:', isLoggedIn);
+  //   console.log('location.pathname:', location.pathname);
+  //   if (!isLoggedIn && location.pathname !== '/login') {
+  //     console.log('Redirecting to /login');
+  //     navigate('/');
+  //   }
+  // }, [isLoggedIn, location.pathname, navigate]);
 
   const handleLogout = () => {
     logout();

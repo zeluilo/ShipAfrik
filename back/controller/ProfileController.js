@@ -93,7 +93,7 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       console.log('User not found:', email);
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.statufs(400).json({ message: 'Invalid email or password' });
     }
 
     // Compare the provided password with the hashed password
