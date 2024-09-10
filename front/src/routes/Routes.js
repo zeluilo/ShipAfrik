@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from '../components/Context'; // Adjust the path as needed
-import Shipper from "../pages/website/pages/Shipper";
+import ShipperHub from "../pages/website/pages/Shipper/ShipperHub";
+import  BecomeShipper from "../pages/website/pages/Shipper/BecomeShipper";
 
 const AppRoutes = () => {
   const { isLoggedIn, currentUser } = useAuth();
@@ -47,7 +48,8 @@ const AppRoutes = () => {
   return (
     <>
       <Routes>
-        <Route path="/become-shipper" element={<Shipper />} />
+        <Route path="/become-shipper" element={<BecomeShipper />} />
+        <Route path="/shipper-hub" element={<ShipperHub />} />
         </Routes>
     </>
   );

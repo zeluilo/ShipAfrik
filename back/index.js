@@ -24,6 +24,7 @@ app.set('view engine', 'ejs');
 
 // Import Controllers
 const ProfileController = require("./controller/ProfileController");
+const ShipmentController = require("./controller/ShipmentController");
 
 // Connect to Port
 const PORT = process.env.PORT || 3001;
@@ -33,6 +34,7 @@ app.listen(PORT, () => {
 
 // Use routes from controllers
 app.use("/shipafrik", ProfileController);
+app.use("/shipafrik", ShipmentController);
 
 // Other controllers
 // app.use("/universe", authenticateToken, ProfileController);

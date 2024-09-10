@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../../components/Context';
+import { useAuth } from '../../../../components/Context';
 import { useNavigate } from 'react-router-dom';
 
-const Shipper = () => {
+const BecomeShipper = () => {
   // State for handling form input
   const [formData, setFormData] = useState({
     businessName: '',
@@ -197,4 +197,4 @@ const Shipper = () => {
   );
 };
 
-export default Shipper;
+export default BecomeShipper;

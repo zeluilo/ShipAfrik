@@ -7,7 +7,6 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Home from '../pages/website/Home';
 import Register from '../pages/profile/Register';
-import Shipper from '../pages/website/pages/Shipper';
 import Header from '../pages/website/main/Header';
 import Footer from '../pages/website/main/Footer';
 // import { Elements } from '@stripe/react-stripe-js';

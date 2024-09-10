@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
-const User = require('../model/User'); // Import the User model
+const User = require('../model/User');
 
 // Load environment variables from .env file
 const dotenv = require('dotenv');

@@ -172,8 +172,8 @@ function Header() {
                       <span className="d-none d-md-block ps-2">Loading...</span>
                     ) : (
                       <span className="d-none d-md-block ps-2">{user?.firstName} {user?.lastName}</span>
-                    )}                
-                    </Link>
+                    )}
+                  </Link>
 
                   <ul className="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile" >
                     <li className="dropdown-header">
@@ -193,6 +193,20 @@ function Header() {
                     <li>
                       <hr className="dropdown-divider" />
                     </li>
+                    {user?.userType === 'SHIPPER' ? (
+                      <>
+                        <li>
+                          <Link className="dropdown-item d-flex align-items-center" to="/shipper-hub">
+                            <i className="bi bi-truck"></i>
+                            <span>Shipper Hub</span>
+                          </Link>
+                        </li>
+
+                        <li>
+                          <hr className="dropdown-divider" />
+                        </li>
+                      </>
+                    ) : null}
 
                     <li>
                       <a className="dropdown-item align-items-center" href="users-profile.html">
