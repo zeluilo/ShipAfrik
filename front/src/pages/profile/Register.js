@@ -47,7 +47,7 @@ const RegisterPage = () => {
     try {
       const payload = {
         ...form,
-        userType: 'USER', // Include userType if required by your server
+        userType: 'SHIPPER', // Include userType if required by your server
       };
   
       console.log('Submitting registration form with data:', payload); // Log the form data

@@ -13,13 +13,23 @@ const shipmentSchema = new mongoose.Schema({
     warehousePostcode: String,
     doorToDoorFee: String,
     pickupRadius: String,
-    status: String,
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
     availableCollectionDays: [String],
-    boxSizes: [boxSizeSchema]
+    boxSizes: [boxSizeSchema],
+    datePosted: {
+        type: Date,
+      },
+      dateCreated: {
+        type: Date,
+        default: Date.now
+      },
+      doorToChecked: {
+        type: Boolean,
+        default: false
+      }
 });
 
 module.exports = mongoose.model('Shipment', shipmentSchema);
