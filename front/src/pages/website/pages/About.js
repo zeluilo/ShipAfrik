@@ -1,13 +1,112 @@
-import React from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../../components/Context";
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { toast } from 'react-toastify';
 
 const About = () => {
+  const { isLoggedIn, logout, currentUser } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [formData, setFormData] = useState({
+    boxSizes: [
+      { size: 'Small', quantity: '' },
+      { size: 'Medium', quantity: '' },
+      { size: 'Large', quantity: '' },
+      { size: 'Standard Barrel', quantity: '' },
+    ],
+    serviceType: '',
+    pickupPostcode: '',
+    destinationCity: '',
+    collectBy: '',
+    arriveBy: '',
+  });
+
+  // Handle changes in form inputs
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevData => ({ ...prevData, [name]: value }));
+  };
+
+  const handleDateChange = (field, date) => {
+    setFormData(prevData => ({ ...prevData, [field]: date }));
+  };
+
+  const handleBoxSizeChange = (index, field, value) => {
+    const newBoxSizes = [...formData.boxSizes];
+    newBoxSizes[index][field] = value;
+    setFormData(prevData => ({ ...prevData, boxSizes: newBoxSizes }));
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const requiredFields = [
+      'boxSizes',
+      'serviceType',
+      'pickupPostcode',
+      'destinationCity',
+      'collectBy',
+      'arriveBy'
+    ];
+
+    for (let field of requiredFields) {
+      if (!formData[field] || (Array.isArray(formData[field]) && formData[field].length === 0)) {
+        toast.error(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}.`);
+        return;
+      }
+    }
+
+    const payload = {
+      ...formData,
+      userId: currentUser,
+    };
+
+    if (isLoggedIn) {
+      // If the user is logged in, use the API
+      try {
+        const response = await axios.post('http://localhost:3001/shipafrik/create-quote', payload, {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        if (response.status === 201) {
+          toast.success('Quote request submitted successfully!');
+          setFormData({
+            boxSizes: [
+              { size: 'Small', quantity: '' },
+              { size: 'Medium', quantity: '' },
+              { size: 'Large', quantity: '' },
+              { size: 'Standard Barrel', quantity: '' },
+            ],
+            serviceType: '',
+            pickupPostcode: '',
+            destinationCity: '',
+            collectBy: '',
+            arriveBy: '',
+          });
+          navigate('/compare-quotes');
+        }
+      } catch (error) {
+        toast.error('Failed to submit quote request.');
+      }
+    } else {
+      // If the user is not logged in, save the form data to local storage
+      localStorage.setItem('quoteFormData', JSON.stringify(formData));
+      toast.success('Quote details stored successfully in local storage!');
+      navigate('/compare-quotes');
+    }
+  };
+
   return (
     <section id="get-started" className="get-started section">
       <div className="container">
         <div className="row justify-content-between gy-4">
-
           {/* Left content */}
-          <div className="col-lg-6 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="100">
+          <div className="col-lg-4 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="100">
             <div className="content">
               <h3>About ShipAfrik</h3>
               <p>
@@ -20,38 +119,141 @@ const About = () => {
           </div>
 
           {/* Right form */}
-          <div className="col-lg-5" data-aos="zoom-out" data-aos-delay="200">
-            <form action="forms/quote.php" method="post" className="php-email-form">
+          <div className="col-lg-8" data-aos="zoom-out" data-aos-delay="200">
+            <form onSubmit={handleSubmit} className="php-email-form">
               <h3>Request a Quote</h3>
-              <p>Fill out the form below to get a customized shipping quote. Our team will get back to you with detailed information and options tailored to your needs.</p>
-              <div className="row gy-3">
+              <p>
+                Fill out the form below to get a customized shipping quote. Our team will get back to you with detailed information and options tailored to your needs.
+              </p>
+              <div className="row">
+                <div className="col-xl-12">
+                  {/* Table for Request Details */}
+                  <table className="table table-borderless table-striped mb-4">
+                    <tbody>
+                      <tr>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            <label htmlFor="collectBy" className="me-2">Collect by:</label>
+                            <DatePicker
+                              className="form-control"
+                              id="collectBy"
+                              selected={formData.collectBy ? new Date(formData.collectBy) : null}
+                              dateFormat="yyyy/MM/dd"
+                              onChange={date => handleDateChange('collectBy', date)}
+                              minDate={new Date()}
+                              placeholderText="Select collection date"
+                              required
+                            />
+                          </div>
+                        </td>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            <label htmlFor="arriveBy" className="me-2">Arrive by:</label>
+                            <DatePicker
+                              className="form-control"
+                              id="arriveBy"
+                              selected={formData.arriveBy ? new Date(formData.arriveBy) : null}
+                              dateFormat="yyyy/MM/dd"
+                              onChange={date => handleDateChange('arriveBy', date)}
+                              minDate={formData.collectBy ? new Date(formData.collectBy) : new Date()}
+                              placeholderText="Select arrival date"
+                              required
+                            />
+                          </div>
+                        </td>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            <label htmlFor="serviceType" className="me-2">Type of Service:</label>
+                            <select
+                              id="serviceType"
+                              className="form-control w-auto"
+                              value={formData.serviceType}
+                              onChange={e => handleChange(e)}
+                              name="serviceType"
+                              required
+                            >
+                              <option value="">Select service type</option>
+                              <option value="Standard">Standard</option>
+                              <option value="Express">Express</option>
+                              <option value="Overnight">Overnight</option>
+                            </select>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            <label htmlFor="pickupPostcode" className="me-2">Pickup Postcode:</label>
+                            <input
+                              type="text"
+                              id="pickupPostcode"
+                              name="pickupPostcode"
+                              className="form-control"
+                              placeholder="Enter postcode"
+                              value={formData.pickupPostcode}
+                              onChange={handleChange}
+                              required
+                            />
+                          </div>
+                        </td>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            <label htmlFor="destinationCity" className="me-2">Destination City:</label>
+                            <input
+                              type="text"
+                              id="destinationCity"
+                              name="destinationCity"
+                              className="form-control"
+                              placeholder="Enter city"
+                              value={formData.destinationCity}
+                              onChange={handleChange}
+                              required
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
 
-                <div className="col-12">
-                  <input type="text" name="name" className="form-control" placeholder="Name" required />
+                  {/* Table for Box Sizes */}
+                  <div className="col-xl-12">
+                    <table className="table table-borderless table-striped">
+                      <thead>
+                        <tr>
+                          <th>Your Shipment</th>
+                          <th>Quantity</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {formData.boxSizes.map((box, index) => (
+                          <tr key={index}>
+                            <td>{box.size}</td>
+                            <td>
+                              <input
+                                type="number"
+                                className="form-control"
+                                placeholder={`Enter ${box.size} Quantity`}
+                                value={box.quantity}
+                                onChange={(e) => handleBoxSizeChange(index, 'quantity', e.target.value)}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="row mt-4">
+                    <div className="col text-center">
+                      <button type="submit" className="btn btn-primary">Compare Quotes</button>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="col-12">
-                  <input type="email" className="form-control" name="email" placeholder="Email" required />
-                </div>
-
-                <div className="col-12">
-                  <input type="text" className="form-control" name="phone" placeholder="Phone" required />
-                </div>
-
-                <div className="col-12">
-                  <textarea className="form-control" name="message" rows="6" placeholder="Message" required></textarea>
-                </div>
-
-                <div className="col-12 text-center">
-                  <div className="loading">Loading</div>
-                  <div className="error-message"></div>
-                  <div className="sent-message">Your quote request has been sent successfully. Thank you!</div>
-                  <button type="submit">Get a Quote</button>
-                </div>
-
               </div>
             </form>
           </div>
+
 
         </div>
       </div>

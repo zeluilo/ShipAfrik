@@ -149,9 +149,25 @@ function Header() {
                   Home
                 </Link>
               </li>
-              <li>
-                <Link to="/become-shipper">Be a Shipper</Link>
-              </li>
+              {user?.userType === 'USER' ? (
+                <>
+                  <li>
+                    <Link to="/become-shipper">Be a Shipper</Link>
+                  </li>
+                </>
+              ) : null}
+              {user?.userType === 'SHIPPER' ? (
+                <>
+                  <li>
+                    <Link to="/projects">Track Shipments</Link>
+                  </li>
+                </>
+              ) : (
+                <li>
+                  <Link to="/projects">Track Orders</Link>
+                </li>
+              )}
+
               <li>
                 <Link to="/projects">Testimonials</Link>
               </li>
@@ -207,6 +223,37 @@ function Header() {
                         </li>
                       </>
                     ) : null}
+
+                    {user?.userType === 'USER' ? (
+                      <>
+                        <li>
+                          <Link className="dropdown-item d-flex align-items-center" to="/customer-hub">
+                            <i className="bi bi-box"></i>
+                            <span>My Shipments</span>
+                          </Link>
+                        </li>
+
+                        <li>
+                          <hr className="dropdown-divider" />
+                        </li>
+                      </>
+                    ) : null}
+
+                    {user?.userType === 'ADMIN' ? (
+                      <>
+                        <li>
+                          <Link className="dropdown-item d-flex align-items-center" to="/admin-dashboard">
+                            <i className="bi bi-gear"></i>
+                            <span>Admin Dashboard</span>
+                          </Link>
+                        </li>
+
+                        <li>
+                          <hr className="dropdown-divider" />
+                        </li>
+                      </>
+                    ) : null}
+
 
                     <li>
                       <a className="dropdown-item align-items-center" href="users-profile.html">

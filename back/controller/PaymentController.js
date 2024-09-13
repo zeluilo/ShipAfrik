@@ -155,106 +155,42 @@ Universe`
   }
 });
 
-router.get('/account-plan', async (req, res) => {
+// POST API to create a new order
+router.post('/payment-orders', async (req, res) => {
   try {
-    const planQuery = await db.collection('AccountPlanMD').get();
-    console.log('Plan Query :', planQuery);
+      const {
+          customerName,
+          pickupAddress,
+          contactPhone,
+          contactEmail,
+          dropoffAddress,
+          boxSizes,
+          preferredCollectionDate,
+          grandTotal
+      } = req.body;
 
-    const planData = planQuery.docs.map(doc => doc.data());
-    console.log('Plan:', planData);
+      // Calculate the total for each box size and the grand total
+      const updatedBoxSizes = boxSizes.map(box => ({
+          ...box,
+          total: box.price * box.quantity
+      }));
 
-    res.json({ AccountPlan: planData });
+      const newOrder = new Order({
+          customerName,
+          pickupAddress,
+          contactPhone,
+          contactEmail,
+          dropoffAddress,
+          boxSizes: updatedBoxSizes,
+          preferredCollectionDate,
+          grandTotal
+      });
+
+      await newOrder.save();
+      res.status(201).json({ message: 'Order created successfully', order: newOrder });
   } catch (error) {
-    console.error('Error fetching plan:', error);
-    res.status(500).send('Error fetching plan');
-  }
-});
-
-router.post('/create-payment-intent', async (req, res) => {
-  try {
-    const { amount, currency, planId } = req.body;
-    console.log('Plan ID:', planId);
-
-    // Fetch product details from Firestore based on ProductId
-    const planQuerySnapshot = await db.collection('AccountPlanMD').where('PlanID', '==', planId).get();
-
-    if (planQuerySnapshot.empty) {
-      throw new Error('Plan not found');
-    }
-
-    const planDoc = planQuerySnapshot.docs[0].data();
-    console.log('Plan Doc:', planDoc);
-
-    const Price = planDoc.Price;
-    const ProductId = planDoc.ProductId;
-    const PlanID = planDoc.PlanID;
-    const PlanName = planDoc.PlanName;
-    const PlanNumber = planDoc.PlanNumber
-
-    console.log('Price:', Price);
-    console.log('ProductId:', ProductId);
-    console.log('PlanID:', PlanID);
-    console.log('PlanName:', PlanName);
-    console.log('PlanNumber:', PlanNumber);
-
-    // Create a PaymentIntent with Stripe
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount, // Format price for Stripe (in cents)
-      currency: currency,
-      payment_method_types: ['card'],
-      metadata: {
-        integration_check: 'accept_a_payment',
-        planId: PlanID,
-        planName: PlanName
-      },
-      description: `Payment for ${PlanName}`,
-      setup_future_usage: 'off_session',
-    });
-
-    res.json({ clientSecret: paymentIntent.client_secret, planName: PlanName, message: 'Subscription paid successfully!', productId: ProductId });
-  } catch (error) {
-    console.error('Error creating PaymentIntent:', error);
-    res.status(500).json({ error: 'Failed to create PaymentIntent' });
-  }
-});
-
-router.post('/create-account-plan', async (req, res) => {
-  try {
-    const { planName, planNumber, price } = req.body;
-
-    // Create Product in Stripe
-    const product = await stripe.products.create({
-      name: planName,
-      description: `Account Plan ${planNumber}`,
-      metadata: {
-        planNumber: planNumber
-      },
-    });
-
-    // Create Price for the Product
-    const formattedPrice = formatPriceForStripe(price); // Helper function to format price
-    const stripePrice = await stripe.prices.create({
-      product: product.id,
-      unit_amount: formattedPrice,
-      currency: 'GBP',
-      recurring: { interval: 'month' }, // Adjust as needed for subscription intervals
-    });
-
-    // Create Document in Firestore
-    const newAccountPlan = {
-      productId: product.id,
-      planName: planName,
-      planNumber: planNumber,
-      price: price,
-      stripePriceId: stripePrice.id
-    };
-
-    const docRef = await db.collection('AccountMd').add(newAccountPlan);
-
-    res.json({ product, stripePrice, firestoreDocId: docRef.id });
-  } catch (error) {
-    console.error('Error creating account plan:', error);
-    res.status(500).json({ error: 'Failed to create account plan' });
+      console.error('Error creating order:', error);
+      res.status(500).json({ message: 'Server error' });
   }
 });
 

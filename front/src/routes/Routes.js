@@ -3,6 +3,9 @@ import { Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from '../components/Context'; // Adjust the path as needed
 import ShipperHub from "../pages/website/pages/Shipper/ShipperHub";
 import  BecomeShipper from "../pages/website/pages/Shipper/BecomeShipper";
+import CustomerHub from "../pages/website/pages/Customer/CustomerHub";
+import OrderSummary from "../pages/website/pages/Customer/OrderSummary";
+import CompareQuotes from "../pages/website/pages/Customer/CompareQuotes";
 
 const AppRoutes = () => {
   const { isLoggedIn, currentUser } = useAuth();
@@ -36,10 +39,10 @@ const AppRoutes = () => {
   //   fetchUserProfile();
   // }, [currentUser]);
 
-  if (!isLoggedIn) {
-    // Redirect to login page if not logged in
-    return <Navigate to="/login" />;
-  }
+  // if (!isLoggedIn) {
+  //   // Redirect to login page if not logged in
+  //   return <Navigate to="/login" />;
+  // }
 
   // const adminType = currentUser;
 
@@ -50,6 +53,10 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/become-shipper" element={<BecomeShipper />} />
         <Route path="/shipper-hub" element={<ShipperHub />} />
+        <Route path="/customer-hub" element={<CustomerHub />} />
+        <Route path="/order-summary" element={<OrderSummary />} />
+        <Route path="/compare-quotes" element={<CompareQuotes />} />
+
         </Routes>
     </>
   );

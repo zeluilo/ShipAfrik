@@ -138,12 +138,15 @@ const Availability = () => {
             const response = await axios.get(`http://localhost:3001/shipafrik/shipments/${currentUser}`);
             setShipments(response.data);
             console.log('Shipments: ', response.data)
+
+
             // Check if no shipments are found
             if (response.data.length === 0) {
                 setNoShipmentsMessage('No shipments found.');
             } else {
                 setNoShipmentsMessage('');
             }
+
             setTotalPages(Math.ceil(response.data.length / pageSize));
         } catch (error) {
             console.error('Error fetching shipments:', error);
@@ -263,7 +266,6 @@ const Availability = () => {
         fetchShipments();
     };
 
-    // Function to delete the shipment
     const handleDelete = async () => {
         if (!selectedShipmentId) {
             toast.error('No shipment selected for deletion.');
@@ -272,22 +274,33 @@ const Availability = () => {
 
         try {
             const response = await axios.delete(`http://localhost:3001/shipafrik/delete-shipment/${selectedShipmentId}`);
-            fetchShipments();
             if (response.status === 200 || response.status === 201) {
                 toast.success(response.data.message || 'Shipment deleted successfully!');
-                                fetchShipments();
+
+                // Fetch updated shipments after deletion
+                await fetchShipments();
+
+                // If no shipments remain after deletion, update the message
+                if (shipments.length === 1) {
+                    setNoShipmentsMessage('No shipments found.');
+                }
+
+                // Reset form and states
                 handleClear();
                 setShowCreateShipment(false);
                 setShowEditShipment(false);
             } else {
-                toast.error(response.data.message || 'Error with submission details.');
+                toast.error(response.data.message || 'Error with deletion.');
             }
         } catch (error) {
             toast.error('Failed to delete shipment. Please try again.');
         }
     };
 
-
+    const handleViewShipmentDetails = (shipment) => {
+        setSelectedShipmentId(shipment._id);
+        setShipment(shipment);
+    };
 
     return (
         <>
@@ -330,7 +343,7 @@ const Availability = () => {
                     <div className="loading-spinner">Loading...</div>
                 ) : (
                     <>
-                        {noShipmentsMessage ? (
+                        {noShipmentsMessage || shipments.length === 0 ? (
                             <div className="m-3"><strong>{noShipmentsMessage}</strong></div>
                         ) : (
                             <>
@@ -365,9 +378,18 @@ const Availability = () => {
                                                             <div>
                                                                 <i
                                                                     type="button"
-                                                                    className='bi bi-eye-fill'
+                                                                    className='bi bi-pencil-square'
                                                                     onClick={() => handleEditShipment(shipment)}
                                                                     style={{ color: 'green' }}
+                                                                ></i>
+                                                            </div>
+                                                            <div>
+                                                                <i
+                                                                    type="button"
+                                                                    className='bi bi-eye-fill'
+                                                                    style={{ color: 'blue' }}
+                                                                    data-bs-toggle="modal" data-bs-target="#viewShipmentDetails"
+                                                                    onClick={() => handleViewShipmentDetails(shipment)}
                                                                 ></i>
                                                             </div>
                                                             <div>
@@ -376,6 +398,7 @@ const Availability = () => {
                                                                     className='bi bi-trash-fill'
                                                                     onClick={() => handleOpenDeleteModal(shipment._id)} // Pass the shipment ID to the handler
                                                                     data-bs-toggle="modal"
+                                                                    style={{ color: 'red' }}
                                                                     data-bs-target="#delete"
                                                                 ></i>
                                                             </div>
@@ -578,6 +601,75 @@ const Availability = () => {
                     </div>
                 </div>
             </div>
+            <div className="modal fade" id="viewShipmentDetails" tabIndex="-1" aria-labelledby="viewShipmentLabel" aria-hidden="true">
+                <div className="modal-dialog modal-dialog-scrollable">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title" id="viewShipmentLabel">Shipment Details</h5>
+                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div className="modal-body">
+                            {selectedShipmentId && shipment ? (
+                                <table className="table">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Estimated Vessel Departure Date:</strong></td>
+                                            <td>{shipment.estimatedVesselDepartureDate ? new Date(shipment.estimatedVesselDepartureDate).toLocaleDateString() : 'N/A'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Destination Port:</strong></td>
+                                            <td>{shipment.destinationPort || 'N/A'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Estimated Arrival Date:</strong></td>
+                                            <td>{shipment.estimatedArrivalDate ? new Date(shipment.estimatedArrivalDate).toLocaleDateString() : 'N/A'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Warehouse Postcode:</strong></td>
+                                            <td>{shipment.warehousePostcode || 'N/A'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Door to Door Fee:</strong></td>
+                                            <td>£{shipment.doorToDoorFee || 'N/A'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Pickup Radius:</strong></td>
+                                            <td>{shipment.pickupRadius || 'N/A'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Available Box Sizes:</strong></td>
+                                            <td>
+                                                <ul>
+                                                    {shipment.boxSizes && shipment.boxSizes.map((box, index) => (
+                                                        <li key={index}>{box.size}: <br /> Price - £{box.price || 'N/A'}<br />Quantity - {box.quantity || 'N/A'}<br /><br /></li>
+                                                    ))}
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Available Collection Days:</strong></td>
+                                            <td>
+                                                {shipment.availableCollectionDays && shipment.availableCollectionDays.length > 0 ? (
+                                                    `${new Date(shipment.availableCollectionDays[0]).toLocaleDateString()} - ${new Date(shipment.availableCollectionDays[shipment.availableCollectionDays.length - 1]).toLocaleDateString()}`
+                                                ) : (
+                                                    'No collection days available.'
+                                                )}
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <p>No shipment selected or details unavailable.</p>
+                            )}
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </>
     );
 };

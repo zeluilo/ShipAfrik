@@ -277,7 +277,7 @@ h6 {
   }
 
   .navmenu .dropdown ul {
-    margin: 0;
+    margin: 5px -15px;
     padding: 10px 0;
     background: var(--nav-dropdown-background-color);
     display: block;
@@ -2919,6 +2919,8 @@ section,
 .table-spacing th {
   padding: 20px; /* Adjust the padding for cells */
 }
+
+
 
 h2.react-datepicker__current-month {
   padding: 0;
