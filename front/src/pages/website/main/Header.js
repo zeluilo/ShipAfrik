@@ -159,17 +159,17 @@ function Header() {
               {user?.userType === 'SHIPPER' ? (
                 <>
                   <li>
-                    <Link to="/projects">Track Shipments</Link>
+                    <Link to="/">Track Shipments</Link>
                   </li>
                 </>
               ) : (
                 <li>
-                  <Link to="/projects">Track Orders</Link>
+                  <Link to="/">Track Orders</Link>
                 </li>
               )}
 
               <li>
-                <Link to="/projects">Testimonials</Link>
+                <Link to="/">Testimonials</Link>
               </li>
               <li>
                 <a href="#contact">Contact Us</a>
@@ -182,7 +182,7 @@ function Header() {
               ) : (
                 <li className="nav-item dropdown pe-3">
 
-                  <Link className="nav-link nav-profile d-flex align-items-center pe-0" href=" " aria-expanded="false">
+                  <Link className="nav-link nav-profile d-flex align-items-center pe-0" href="/" aria-expanded="false">
                     <img src={`${process.env.PUBLIC_URL}/profile.png`} style={{ height: 30 }} alt="Profile" className="rounded-circle" />
                     {loading ? (
                       <span className="d-none d-md-block ps-2">Loading...</span>
@@ -201,7 +201,7 @@ function Header() {
                     </li>
 
                     <li>
-                      <a className="dropdown-item d-flex align-items-center" href="users-profile.html">
+                      <a className="dropdown-item d-flex align-items-center" href="/">
                         <i className="bi bi-person"></i>
                         <span>My Profile</span>
                       </a>
@@ -256,7 +256,7 @@ function Header() {
 
 
                     <li>
-                      <a className="dropdown-item align-items-center" href="users-profile.html">
+                      <a className="dropdown-item align-items-center" href="/">
                         <i className="bi bi-gear"></i>
                         <span>Settings</span>
                       </a>
@@ -265,7 +265,7 @@ function Header() {
                       <hr className="dropdown-divider" />
                     </li>
                     <li>
-                      <Link className="dropdown-item d-flex align-items-center" onClick={handleLogout}>
+                      <Link className="dropdown-item d-flex align-items-center" to='/' onClick={handleLogout}>
                         <i className="bi bi-box-arrow-right"></i>
                         <span>Sign Out</span>
                       </Link>
