@@ -13,11 +13,7 @@ const Orders = () => {
         const fetchOrders = async () => {
             try {
                 const response = await axios.get(`http://localhost:3001/shipafrik/orders/${currentUser}`); // Replace with your API endpoint
-                if (Array.isArray(response.data)) {
-                    setOrders(response.data); // Ensure you're setting orders only if it's an array
-                } else {
-                    console.error('Orders data is not an array:', response.data);
-                }
+                setOrders(response.data);
             } catch (error) {
                 console.error('Error fetching orders:', error);
             }
