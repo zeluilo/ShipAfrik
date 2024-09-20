@@ -5,6 +5,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
 import Availability from './Availability';
+import Orders from './Orders';
 
 const ShipperHub = () => {
     const { currentUser } = useAuth();
@@ -33,7 +34,7 @@ const ShipperHub = () => {
 
                                 <div className="tab-content pt-2">
                                     <div className="tab-pane fade show active profile-overview" id="profile-overview">
-                                        <h5 className="card-title">Orders - In Progress</h5>
+                                        <Orders/>
                                     </div>
 
                                     <div className="tab-pane fade profile-edit pt-3" id="profile-edit">

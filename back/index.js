@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const db = require('./database');
-
+const path = require('path');
 // const authenticateToken = require("./auth/authenticateToken");
 
 // Load environment variables from .env file
@@ -18,6 +18,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type']
   }));
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Set EJS as the view engine
 app.set('view engine', 'ejs');
@@ -25,6 +26,8 @@ app.set('view engine', 'ejs');
 // Import Controllers
 const ProfileController = require("./controller/ProfileController");
 const ShipmentController = require("./controller/ShipmentController");
+const AdminController = require("./controller/AdminController");
+const PaymentController = require("./controller/PaymentController");
 
 // Connect to Port
 const PORT = process.env.PORT || 3001;
@@ -35,6 +38,8 @@ app.listen(PORT, () => {
 // Use routes from controllers
 app.use("/shipafrik", ProfileController);
 app.use("/shipafrik", ShipmentController);
+app.use("/shipafrik", AdminController);
+app.use("/shipafrik", PaymentController);
 
 // Other controllers
 // app.use("/universe", authenticateToken, ProfileController);

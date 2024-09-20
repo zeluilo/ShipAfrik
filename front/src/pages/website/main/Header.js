@@ -18,7 +18,7 @@ function Header() {
   const [mobileNavActive, setMobileNavActive] = useState(false);
   const [scrollTopActive, setScrollTopActive] = useState(false);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // New loading state
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     console.log('Current User Details:', currentUser);
@@ -125,14 +125,6 @@ function Header() {
     setMobileNavActive(!mobileNavActive);
   };
 
-  const scrollToTop = (e) => {
-    e.preventDefault();
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  };
-
   return (
     <>
       <header id="header" className={`header d-flex align-items-center fixed-top`}>
@@ -149,24 +141,20 @@ function Header() {
                   Home
                 </Link>
               </li>
-              {user?.userType === 'USER' ? (
-                <>
-                  <li>
-                    <Link to="/become-shipper">Be a Shipper</Link>
-                  </li>
-                </>
-              ) : null}
-              {user?.userType === 'SHIPPER' ? (
-                <>
-                  <li>
-                    <Link to="/">Track Shipments</Link>
-                  </li>
-                </>
-              ) : (
+              {(user?.userType === 'USER' || !isLoggedIn) && (
                 <li>
-                  <Link to="/">Track Orders</Link>
+                  <Link to="/become-shipper">Be a Shipper</Link>
                 </li>
               )}
+
+
+
+              <li>
+                <Link to="/">
+                  {user?.userType === 'SHIPPER' ? 'Track Shipments' : 'Track Orders'}
+                </Link>
+              </li>
+
 
               <li>
                 <Link to="/">Testimonials</Link>
@@ -201,10 +189,10 @@ function Header() {
                     </li>
 
                     <li>
-                      <a className="dropdown-item d-flex align-items-center" href="/">
+                      <Link className="dropdown-item d-flex align-items-center" to="/profile">
                         <i className="bi bi-person"></i>
                         <span>My Profile</span>
-                      </a>
+                      </Link>
                     </li>
                     <li>
                       <hr className="dropdown-divider" />

@@ -1,22 +1,17 @@
 const mongoose = require('mongoose');
 
-const orderSchema = new mongoose.Schema({
+const OrderSchema = new mongoose.Schema({
     customerName: { type: String, required: true },
     pickupAddress: { type: String, required: true },
     contactPhone: { type: String, required: true },
     contactEmail: { type: String, required: true },
-    dropoffAddress: { type: String },
-    boxSizes: [{
-        size: { type: String, required: true },
-        price: { type: Number, required: true },
-        quantity: { type: Number, required: true },
-        total: { type: Number }
-    }],
-    preferredCollectionDate: { type: Date },
+    dropoffAddress: { type: String, required: true },
+    quotes: { type: Array, default: [] },
+    shipmentId: { type: String, required: true },
+    preferredCollectionDate: { type: Date, required: true },
     grandTotal: { type: Number, required: true },
-    createdAt: { type: Date, default: Date.now }
-});
+    orderReference: { type: String, required: true },
+    status: { type: String, default: 'In Progress' },
+}, { timestamps: true });
 
-const Order = mongoose.model('Order', orderSchema);
-
-module.exports = Order;
+module.exports = mongoose.model('Order', OrderSchema);

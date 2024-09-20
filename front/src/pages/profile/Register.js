@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -63,6 +64,15 @@ const RegisterPage = () => {
       // Handle response based on status code
       if (response.status === 201) { // Created
         toast.success(response.data.message || 'Registration successful!');
+        setForm({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phoneNumber: '',
+          password: '',
+          passwordConfirmation: '',
+        });
+        navigate('/login', { state: { successMessage: 'Logged in successfully!' } });
       } else if (response.status === 400) { // Bad Request
         toast.error(response.data.message || 'Error with registration details.');
       } else {
@@ -90,7 +100,7 @@ const RegisterPage = () => {
   return (
     <section className="bg-dark min-vh-100 d-flex align-items-center">
       <div className="container">
-        <div className="row gy-4 align-items-center">
+        <div className="row gy-4 align-items-center" data-aos="zoom-up" data-aos-delay="150">
           <div className="col-12 col-md-6 col-xl-7">
             <div className="d-flex justify-content-center text-bg-dark">
               <div className="col-12 col-xl-9">
@@ -231,13 +241,6 @@ const RegisterPage = () => {
                     </div>
                   </div>
                 </form>
-                <div className="row">
-                  <div className="col-12">
-                    <div className="d-flex gap-2 gap-md-4 flex-column flex-md-row justify-content-md-end mt-4">
-                      <a href="#!">Forgot password</a>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

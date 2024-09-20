@@ -6,6 +6,8 @@ import  BecomeShipper from "../pages/website/pages/Shipper/BecomeShipper";
 import CustomerHub from "../pages/website/pages/Customer/CustomerHub";
 import OrderSummary from "../pages/website/pages/Customer/OrderSummary";
 import CompareQuotes from "../pages/website/pages/Customer/CompareQuotes";
+import Country from "../pages/website/pages/Admin/Country";
+import Profile from "../pages/profile/Profile";
 
 const AppRoutes = () => {
   const { isLoggedIn, currentUser } = useAuth();
@@ -56,7 +58,8 @@ const AppRoutes = () => {
         <Route path="/customer-hub" element={<CustomerHub />} />
         <Route path="/order-summary" element={<OrderSummary />} />
         <Route path="/compare-quotes" element={<CompareQuotes />} />
-
+        <Route path="/countries-cities" element={<Country />}/>
+        <Route path="/profile" element={<Profile />} />
         </Routes>
     </>
   );

@@ -4,6 +4,21 @@ const { admin, db } = require('../database');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const nodemailer = require('nodemailer');
 const cron = require('node-cron');
+const crypto = require('crypto');
+const Order = require('../model/Order');
+const Shipment = require('../model/Shipment');
+
+function generateOrderReference() {
+  // Get current timestamp, convert to base-36 and slice last 6 characters
+  const timestampPart = Date.now().toString(36).slice(-6).toUpperCase();
+
+  // Generate random alphanumeric string of 6 characters
+  const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+  // Combine both parts for a unique order reference
+  return `${timestampPart}${randomPart}`;
+}
+
 
 function formatDate(date) {
   const options = {
@@ -164,33 +179,100 @@ router.post('/payment-orders', async (req, res) => {
           contactPhone,
           contactEmail,
           dropoffAddress,
-          boxSizes,
-          preferredCollectionDate,
-          grandTotal
+          quotes,
+          shipmentId,
+          preferredDate,
+          grandTotal,
+          status,
       } = req.body;
 
-      // Calculate the total for each box size and the grand total
-      const updatedBoxSizes = boxSizes.map(box => ({
-          ...box,
-          total: box.price * box.quantity
-      }));
+      // Generate a unique order reference number
+      const orderReference = generateOrderReference();
 
+      // Log the generated order reference
+      console.log('Generated Order Reference:', orderReference);
+
+      // Prepare the new order
       const newOrder = new Order({
           customerName,
           pickupAddress,
           contactPhone,
           contactEmail,
           dropoffAddress,
-          boxSizes: updatedBoxSizes,
-          preferredCollectionDate,
-          grandTotal
+          quotes,
+          shipmentId,
+          preferredCollectionDate: preferredDate,
+          grandTotal,
+          orderReference,
+          status
       });
 
+      // Save the order to the database
       await newOrder.save();
-      res.status(201).json({ message: 'Order created successfully', order: newOrder });
+
+      // Return a success response
+      console.log('Order created successfully');
+      return res.status(201).json({ message: 'Order created successfully', order: newOrder });
   } catch (error) {
       console.error('Error creating order:', error);
-      res.status(500).json({ message: 'Server error' });
+      return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET API to fetch orders based on shipment details for the current user
+router.get('/orders/:currentUser', async (req, res) => {
+  const { currentUser } = req.params; // Assuming currentUser is passed as a route parameter
+
+  console.log('Fetching orders for user:', currentUser); // Debugging current user
+
+  try {
+      if (!currentUser) {
+          console.log('User ID is missing'); // Debugging missing user ID
+          return res.status(400).json({ message: 'User ID is required' });
+      }
+
+      // Fetch all orders
+      console.log('Fetching all orders from the database...');
+      const orders = await Order.find({});
+      console.log('Orders fetched:', orders.length); // Debugging number of orders found
+
+      if (!orders.length) {
+          console.log('No orders found in the database'); // Debugging when no orders exist
+          return res.status(404).json({ message: 'No orders found' });
+      }
+
+      const matchingOrders = [];
+
+      // Loop through each order to find shipment details
+      for (const order of orders) {
+          console.log('Processing order:', order._id); // Debugging each order ID
+
+          const shipmentId = order.shipmentId; // Assuming your orders have a shipmentId field
+          console.log('Fetching shipment details for shipment ID:', shipmentId); // Debugging shipment ID
+
+          // Fetch the shipment details using the shipmentId
+          const shipmentDetails = await Shipment.findById(shipmentId);
+          console.log('Shipment details:', shipmentDetails); // Debugging shipment details
+
+          if (shipmentDetails && shipmentDetails.userId.toString() === currentUser) {
+              console.log('Order matches current user:', currentUser); // Debugging matching order
+              matchingOrders.push(order);
+          } else {
+              console.log('Order does not match current user:', currentUser); // Debugging non-matching order
+          }
+      }
+
+      if (matchingOrders.length === 0) {
+          console.log('No matching orders found for user:', currentUser); // Debugging no matching orders
+          return res.status(404).json({ message: 'No orders found for the current user' });
+      }
+
+      // Return the matched orders
+      console.log('Matched orders:', matchingOrders); // Debugging final matched orders
+      return res.status(200).json({ orders: matchingOrders });
+  } catch (error) {
+      console.error('Error fetching orders:', error); // Debugging server error
+      return res.status(500).json({ message: 'Server error' });
   }
 });
 

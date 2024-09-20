@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from "../../../../components/Context";
+import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
@@ -28,6 +29,8 @@ const Availability = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prevData => ({ ...prevData, [name]: value }));
+        setSearchTerm(e.target.value);
+
     };
 
     const handleBoxSizeChange = (index, field, value) => {
@@ -101,7 +104,7 @@ const Availability = () => {
     const handleClear = () => {
         setFormData({
             estimatedVesselDepartureDate: '',
-            destinationPort: '',
+            destinationPort: null,
             estimatedArrivalDate: '',
             warehousePostcode: '',
             doorToDoorFee: '',
@@ -113,6 +116,8 @@ const Availability = () => {
             ],
             availableCollectionDays: [],
         });
+        setSelectedItem(null); 
+        setSearchTerm('');
         setIsDoorToDoorChecked(false);
     };
 
@@ -129,7 +134,9 @@ const Availability = () => {
     const [loading, setLoading] = useState(true);
     const [noShipmentsMessage, setNoShipmentsMessage] = useState('');
     const [selectedShipmentId, setSelectedShipmentId] = useState(null);
-
+    const [data, setData] = useState([]);
+    const [search, setSearch] = useState('');
+    const [selectedItem, setSelectedItem] = useState('');
     // Fetch shipments initially
     const fetchShipments = async () => {
         try {
@@ -301,6 +308,36 @@ const Availability = () => {
         setSelectedShipmentId(shipment._id);
         setShipment(shipment);
     };
+    useEffect(() => {
+        fetchCountriesAndCities();
+    }, []);
+    // Fetch countries and cities
+    const fetchCountriesAndCities = async () => {
+        try {
+            const response = await axios.get('http://localhost:3001/shipafrik/get-countries');
+            const countries = response.data;
+
+            // Combine countries and cities into a single list for react-select options
+            const combined = countries.flatMap(country => [
+                { value: country.name, label: country.name }, // country option
+                ...country.cities.map(city => ({ value: `${city.name}, ${country.name}`, label: `${city.name}, ${country.name}` })) // city options
+            ]);
+
+            setData(combined);
+        } catch (error) {
+            console.error('Error fetching countries and cities:', error);
+        }
+    };
+
+    const handleSelectChange = (selectedOption) => {
+        setSelectedItem(selectedOption);
+        setFormData(prevData => ({ ...prevData, destinationPort: selectedOption ? selectedOption.value : '' }));
+    };
+
+    // const filteredItems = data.filter(item =>
+    //     item.toLowerCase().includes(searchTerm.toLowerCase())
+    // );
+
 
     return (
         <>
@@ -455,8 +492,19 @@ const Availability = () => {
                                         </tr>
                                         <tr>
                                             <td><label>Destination Port</label></td>
-                                            <td><input type="text" name='destinationPort' className="form-control"
-                                                value={formData.destinationPort} onChange={handleChange} placeholder="Enter destination port" required /></td>
+                                            <td>
+                                                <td>
+                                                    <Select
+                                                        options={data}
+                                                        
+                                                        value={selectedItem}
+                                                        onChange={handleSelectChange}
+                                                        placeholder="Search destination port"
+                                                        isClearable
+                                                        required
+                                                    />
+                                                </td>
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td><label>Estimated Arrival Date</label></td>

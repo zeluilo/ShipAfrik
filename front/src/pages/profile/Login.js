@@ -53,9 +53,18 @@ function Login() {
       const tokenExpiration = tokenCreationTime + tokenValidityPeriodInMillis;
       login(user, token, tokenExpiration);
       setAuthData({ user, token, tokenExpiration });
+      
+      const userResponse = await axios.get(`http://localhost:3001/shipafrik/user/${user}`);
+      console.log('User Data:', userResponse.data)
 
+      if (userResponse.data.userType === 'SHIPPER') {
+        navigate('/shipper-hub', { state: { successMessage: 'Logged in successfully!' } });
+      } else if (userResponse.data.userType === 'USER') {
+        navigate('/customer-hub', { state: { successMessage: 'Logged in successfully!' } });
+      } else {
+        navigate('/', { state: { successMessage: 'Logged in successfully!' } });
+      }
       toast.success('Logged in successfully!');
-      navigate('/', { state: { successMessage: 'Logged in successfully!' } });
     } catch (error) {
       console.error('Error during login:', error);
       const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
@@ -77,7 +86,7 @@ function Login() {
   return (
     <section className="bg-dark min-vh-100 d-flex align-items-center">
       <div className="container">
-        <div className="row gy-4 align-items-center">
+        <div className="row gy-4 align-items-center" data-aos="zoom-up" data-aos-delay="150">
           <div className="col-12 col-md-6 col-xl-7">
             <div className="d-flex justify-content-center text-bg-dark">
               <div className="col-12 col-xl-9">
@@ -157,13 +166,6 @@ function Login() {
                     </div>
                   </div>
                 </form>
-                <div className="row">
-                  <div className="col-12">
-                    <div className="d-flex gap-2 gap-md-4 flex-column flex-md-row justify-content-md-end mt-4">
-                      <a href="#!">Forgot password</a>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

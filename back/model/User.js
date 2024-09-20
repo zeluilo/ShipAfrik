@@ -36,6 +36,10 @@ const userSchema = new Schema({
   dateCreated: {
     type: Date,
     default: Date.now
+  },
+  image: {
+    type: String,
+    trim: true
   }
 });
 
