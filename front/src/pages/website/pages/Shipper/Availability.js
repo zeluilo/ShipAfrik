@@ -63,6 +63,7 @@ const Availability = () => {
             userId: currentUser,
             doorToDoorChecked: isDoorToDoorChecked,
             availableCollectionDays: formData.availableCollectionDays.map(date => date.toISOString().split('T')[0]),
+            withdraw: false
         };
 
         if (isPost) {
@@ -116,7 +117,7 @@ const Availability = () => {
             ],
             availableCollectionDays: [],
         });
-        setSelectedItem(null); 
+        setSelectedItem(null);
         setSearchTerm('');
         setIsDoorToDoorChecked(false);
     };
@@ -308,9 +309,11 @@ const Availability = () => {
         setSelectedShipmentId(shipment._id);
         setShipment(shipment);
     };
+
     useEffect(() => {
         fetchCountriesAndCities();
     }, []);
+
     // Fetch countries and cities
     const fetchCountriesAndCities = async () => {
         try {
@@ -332,6 +335,23 @@ const Availability = () => {
     const handleSelectChange = (selectedOption) => {
         setSelectedItem(selectedOption);
         setFormData(prevData => ({ ...prevData, destinationPort: selectedOption ? selectedOption.value : '' }));
+    };
+
+    // Handle the withdraw checkbox change
+    const handleWithdrawCheck = async (shipmentId, isWithdrawn) => {
+        try {
+            const response = await axios.put(`http://localhost:3001/shipafrik/update-shipment/${shipmentId}`, {
+                withdraw: isWithdrawn
+            });
+
+            if (response.status === 200) {
+                toast.success('Withdrawal status updated successfully!');
+                fetchShipments(); // Refresh the shipments list
+            }
+        } catch (error) {
+            toast.error('Failed to update withdrawal status');
+            console.error('Error updating withdrawal status:', error);
+        }
     };
 
     // const filteredItems = data.filter(item =>
@@ -394,6 +414,7 @@ const Availability = () => {
                                             <th>Medium</th>
                                             <th>Large</th>
                                             <th>Action</th>
+                                            <th>Withdraw</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -440,6 +461,15 @@ const Availability = () => {
                                                                 ></i>
                                                             </div>
                                                         </div>
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={shipment.withdraw}  // Reflects the boolean status
+                                                            onChange={(e) =>
+                                                                handleWithdrawCheck(shipment._id, e.target.checked) // Sends true or false
+                                                            }
+                                                        />
                                                     </td>
                                                 </tr>
                                             );
@@ -496,7 +526,7 @@ const Availability = () => {
                                                 <td>
                                                     <Select
                                                         options={data}
-                                                        
+
                                                         value={selectedItem}
                                                         onChange={handleSelectChange}
                                                         placeholder="Search destination port"

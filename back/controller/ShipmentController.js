@@ -16,7 +16,8 @@ router.post('/create-shipment', async (req, res) => {
             pickupRadius,
             boxSizes,
             userId,
-            availableCollectionDays
+            availableCollectionDays,
+            withdraw
         } = req.body;
 
         // Log the incoming request
@@ -32,7 +33,8 @@ router.post('/create-shipment', async (req, res) => {
             pickupRadius,
             boxSizes,
             userId,
-            availableCollectionDays
+            availableCollectionDays,
+            withdraw
         });
 
         // Save the shipment to the database
@@ -105,24 +107,6 @@ router.put('/update-shipment/:id', async (req, res) => {
     }
 });
 
-// GET all shipments
-router.get('/shipments', async (req, res) => {
-    try {
-        // Fetch all shipments
-        const shipments = await Shipment.find();
-
-        // If no shipments are found
-        if (shipments.length === 0) {
-            return res.status(404).json({ message: 'No shipments found.' });
-        }
-
-        // Return shipments
-        res.json(shipments);
-    } catch (error) {
-        console.error('Error fetching shipments:', error.message); // Log the error for debugging
-        res.status(500).json({ message: 'Error fetching shipments', error: error.message });
-    }
-});
 // GET all shipments
 router.get('/shipments', async (req, res) => {
     try {
