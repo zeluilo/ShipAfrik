@@ -46,7 +46,7 @@ const TrackOrders = () => {
     return (
         <section id="track-orders" className="section bg-dark min-vh-100 d-flex" style={{ textAlign: 'center' }}>
             <div className="container section-title" data-aos="fade-up">
-                <h2 style={{ marginTop: '50px', color: 'white' }}>Track Your Orders</h2>
+                <h2 style={{ marginTop: '50px', color: 'white' }}>Track Your Shipments</h2>
                 <p style={{ color: 'white' }}>Enter your order reference and email to track your order details.</p>
 
                 <div className="row py-4">
