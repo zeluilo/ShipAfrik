@@ -30,7 +30,7 @@ const Services = () => {
     <section id="constructions" className="constructions section" style={{ textAlign: 'center' }}>
       {/* Section Title */}
       <div className="container section-title" data-aos="fade-up">
-        <h2>Contact</h2>
+        <h2>Get in Touch</h2>
         <p>We offer solutions designed to make your shipping experience smooth and transparent.</p>
         {/* Contact Form */}
         <div className="contact-form-container" style={formContainerStyle}>

@@ -19,13 +19,48 @@ const Availability = () => {
             { size: 'Small', price: '', quantity: '' },
             { size: 'Medium', price: '', quantity: '' },
             { size: 'Large', price: '', quantity: '' },
+            { size: 'Standard Barrel', price: '', quantity: '' },
         ],
         availableCollectionDays: [],
+        withdraw: false
     });
     const [isDoorToDoorChecked, setIsDoorToDoorChecked] = useState(false);
+    const [isWithdrawn, setIsWithdrawn] = useState(false);
 
     // Handle changes in form inputs
     const handleCheckboxChange = (e) => setIsDoorToDoorChecked(e.target.checked);
+    // const handleWithdrawChange = (e) => {
+    //     const isChecked = e.target.checked;
+    //     setIsWithdrawn(isChecked); // Update the local state
+    //     setFormData(prevData => ({ ...prevData, withdraw: isChecked })); // Update formData
+    // };
+
+    // Define the handleWithdrawChange function
+    const handleWithdrawChange = async (shipmentId) => {
+        console.log('handleWithdrawChange called with shipmentId:', shipmentId);
+
+        const newWithdrawStatus = !isWithdrawn;
+        // Update the local state (if you're using local state to reflect the UI)
+
+        try {
+            const response = await axios.put(`http://localhost:3001/shipafrik/update-shipment/${shipmentId}`, {
+                withdraw: true
+            });
+            console.log('Database updated successfully:', response.data);
+
+            if (response.status === 200) {
+                console.log('Database updated successfully:', response.data);
+                setIsWithdrawn(newWithdrawStatus);
+            } else {
+                console.log('Update failed:', response.status, response.statusText);
+            }
+        } catch (error) {
+            console.error('Error updating the database:', error);
+            // Optionally revert the checkbox state if the request fails
+            setIsWithdrawn(!newWithdrawStatus);
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prevData => ({ ...prevData, [name]: value }));
@@ -50,6 +85,7 @@ const Availability = () => {
             'destinationPort',
             'estimatedArrivalDate',
             'warehousePostcode',
+            'availableCollectionDays',
         ];
         for (let field of requiredFields) {
             if (!formData[field]) {
@@ -63,11 +99,15 @@ const Availability = () => {
             userId: currentUser,
             doorToDoorChecked: isDoorToDoorChecked,
             availableCollectionDays: formData.availableCollectionDays.map(date => date.toISOString().split('T')[0]),
-            withdraw: false
+            // withdraw: isWithdrawn
         };
 
         if (isPost) {
             payload = { ...payload, datePosted: new Date().toISOString() };
+        }
+
+        if (isWithdrawn) {
+            payload.withdraw = !isWithdrawn; // Toggle the withdraw state
         }
 
         try {
@@ -114,6 +154,7 @@ const Availability = () => {
                 { size: 'Small', price: '', quantity: '' },
                 { size: 'Medium', price: '', quantity: '' },
                 { size: 'Large', price: '', quantity: '' },
+                { size: 'Standard Barrel', price: '', quantity: '' },
             ],
             availableCollectionDays: [],
         });
@@ -138,6 +179,7 @@ const Availability = () => {
     const [data, setData] = useState([]);
     const [search, setSearch] = useState('');
     const [selectedItem, setSelectedItem] = useState('');
+
     // Fetch shipments initially
     const fetchShipments = async () => {
         try {
@@ -157,7 +199,7 @@ const Availability = () => {
 
             setTotalPages(Math.ceil(response.data.length / pageSize));
         } catch (error) {
-            console.error('Error fetching shipments:', error);
+            // console.error('Error fetching shipments:', error);
             // toast.error('Failed to fetch shipments');
         } finally {
             setLoading(false); // Set loading to false once data is fetched
@@ -240,6 +282,7 @@ const Availability = () => {
 
     const fetchShipmentEdit = async (id) => {
         console.log('Fetching shipment with ID:', id);
+        setLoading(true); // Set loading to true
         try {
             const response = await axios.get(`http://localhost:3001/shipafrik/shipment/${currentUser}/${id}`);
             setFormData({
@@ -253,8 +296,12 @@ const Availability = () => {
                 availableCollectionDays: response.data.availableCollectionDays.map(date => new Date(date)),
             });
             setIsDoorToDoorChecked(response.data.doorToDoorChecked);
+            setIsWithdrawn(response.data.withdraw);
         } catch (error) {
+            console.error('Error fetching shipment details:', error);
             toast.error('Failed to fetch shipment details');
+        } finally {
+            setLoading(false); // Reset loading state
         }
     };
 
@@ -337,23 +384,6 @@ const Availability = () => {
         setFormData(prevData => ({ ...prevData, destinationPort: selectedOption ? selectedOption.value : '' }));
     };
 
-    // Handle the withdraw checkbox change
-    const handleWithdrawCheck = async (shipmentId, isWithdrawn) => {
-        try {
-            const response = await axios.put(`http://localhost:3001/shipafrik/update-shipment/${shipmentId}`, {
-                withdraw: isWithdrawn
-            });
-
-            if (response.status === 200) {
-                toast.success('Withdrawal status updated successfully!');
-                fetchShipments(); // Refresh the shipments list
-            }
-        } catch (error) {
-            toast.error('Failed to update withdrawal status');
-            console.error('Error updating withdrawal status:', error);
-        }
-    };
-
     // const filteredItems = data.filter(item =>
     //     item.toLowerCase().includes(searchTerm.toLowerCase())
     // );
@@ -413,8 +443,8 @@ const Availability = () => {
                                             <th>Small</th>
                                             <th>Medium</th>
                                             <th>Large</th>
+                                            <th>Barrels</th>
                                             <th>Action</th>
-                                            <th>Withdraw</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -422,6 +452,7 @@ const Availability = () => {
                                             const smallBox = shipment.boxSizes.find(box => box.size === 'Small') || {};
                                             const mediumBox = shipment.boxSizes.find(box => box.size === 'Medium') || {};
                                             const largeBox = shipment.boxSizes.find(box => box.size === 'Large') || {};
+                                            const barrelBox = shipment.boxSizes.find(box => box.size === 'Standard Barrel') || {};
 
                                             return (
                                                 <tr key={shipment.id}>
@@ -431,6 +462,7 @@ const Availability = () => {
                                                     <td>£{smallBox.price || '-'} ({smallBox.quantity || '-'})</td>
                                                     <td>£{mediumBox.price || '-'} ({mediumBox.quantity || '-'})</td>
                                                     <td>£{largeBox.price || '-'} ({largeBox.quantity || '-'})</td>
+                                                    <td>£{barrelBox.price || '-'} ({barrelBox.quantity || '-'})</td>
                                                     <td>
                                                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
                                                             <div>
@@ -461,15 +493,6 @@ const Availability = () => {
                                                                 ></i>
                                                             </div>
                                                         </div>
-                                                    </td>
-                                                    <td>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={shipment.withdraw}  // Reflects the boolean status
-                                                            onChange={(e) =>
-                                                                handleWithdrawCheck(shipment._id, e.target.checked) // Sends true or false
-                                                            }
-                                                        />
                                                     </td>
                                                 </tr>
                                             );
@@ -523,17 +546,14 @@ const Availability = () => {
                                         <tr>
                                             <td><label>Destination Port</label></td>
                                             <td>
-                                                <td>
-                                                    <Select
-                                                        options={data}
-
-                                                        value={selectedItem}
-                                                        onChange={handleSelectChange}
-                                                        placeholder="Search destination port"
-                                                        isClearable
-                                                        required
-                                                    />
-                                                </td>
+                                                <Select
+                                                    options={data}
+                                                    value={formData.destinationPort ? data.find(option => option.value === formData.destinationPort) : null}
+                                                    onChange={handleSelectChange}
+                                                    placeholder="Search destination port"
+                                                    isClearable
+                                                    required
+                                                />
                                             </td>
                                         </tr>
                                         <tr>
@@ -646,6 +666,16 @@ const Availability = () => {
                                     onClick={(e) => handleSubmit(e, true)}
                                 >
                                     Post
+                                </button>
+
+                                {/* Withdraw button */}
+                                <button
+                                    type="button"
+                                    className="btn btn-warning mx-2"
+                                    style={{ width: '150px' }}
+                                    onClick={(e) => handleSubmit(e, false, true)} // Call handleSubmit for withdraw
+                                >
+                                    {isWithdrawn ? 'Reinstate' : 'Withdraw'} {/* Change button text based on state */}
                                 </button>
 
                                 <button

@@ -67,7 +67,8 @@ router.put('/update-shipment/:id', async (req, res) => {
             pickupRadius,
             boxSizes,
             datePosted,
-            availableCollectionDays
+            availableCollectionDays,
+            withdraw
         } = req.body;
 
         // Log the incoming request
@@ -85,7 +86,8 @@ router.put('/update-shipment/:id', async (req, res) => {
                 pickupRadius,
                 boxSizes,
                 datePosted,
-                availableCollectionDays
+                availableCollectionDays,
+                withdraw
             },
             { new: true } // Return the updated document
         );

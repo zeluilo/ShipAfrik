@@ -174,7 +174,7 @@ h6 {
   font-size: 24px;
   margin: 0;
   font-weight: 700;
-  color: var(--heading-color);
+  color: rgb(128, 125, 125);
 }
 
 .header .logo span {
@@ -229,7 +229,7 @@ h6 {
 
   .navmenu a,
   .navmenu a:focus {
-    color: var(--nav-color);
+    color: rgb(128, 125, 125);
     font-size: 14px;
     padding: 0 10px;
     font-family: var(--nav-font);
@@ -273,7 +273,7 @@ h6 {
   .navmenu li:hover>a,
   .navmenu .active,
   .navmenu .active:focus {
-    color: var(--nav-hover-color);
+    color: rgb(128, 125, 125);
   }
 
   .navmenu .dropdown ul {

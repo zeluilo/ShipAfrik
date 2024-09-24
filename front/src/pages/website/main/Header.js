@@ -142,19 +142,25 @@ function Header() {
                 </Link>
               </li>
               {(user?.userType === 'USER' || !isLoggedIn) && (
-                <li>
-                  <Link to="/become-shipper">Be a Shipper</Link>
-                </li>
+                <>
+                  <li>
+                    <Link to="/become-shipper">Be a Shipper</Link>
+                  </li>
+                  <li>
+                    <Link to="/track-orders"> Track Orders</Link>
+                  </li>
+                </>
               )}
 
 
 
-              <li>
-                <Link to="/">
-                  {user?.userType === 'SHIPPER' ? 'Track Shipments' : 'Track Orders'}
-                </Link>
-              </li>
-
+              {(user?.userType === 'SHIPPER') && (
+                <>
+                  <li>
+                    <Link to="/track-orders"> Track Shipments</Link>
+                  </li>
+                </>
+              )}
 
               <li>
                 <Link to="/">Testimonials</Link>

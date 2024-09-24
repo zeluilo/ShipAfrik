@@ -11,7 +11,23 @@ const OrderSchema = new mongoose.Schema({
     preferredCollectionDate: { type: Date, required: true },
     grandTotal: { type: Number, required: true },
     orderReference: { type: String, required: true },
-    status: { type: String, default: 'In Progress' },
-}, { timestamps: true });
+    status: {
+        type: String,
+        enum: [
+            'Shipment Booked',
+            'In Progress',
+            'Shipment Has Left the Dock',
+            'Shipment Has Landed in Ghana',
+            'Shipment Delivered',
+            'Shipped'
+        ],
+        default: 'In Progress'
+    },
+    trackingHistory: [
+        {
+            status: String,
+            date: { type: Date, default: Date.now }
+        }
+    ]}, { timestamps: true });
 
 module.exports = mongoose.model('Order', OrderSchema);

@@ -50,14 +50,14 @@ const Services = () => {
   return (
     <section id="constructions" className="constructions section">
       {/* Section Title */}
-      <div className="container section-title" data-aos="fade-up">
+      {/* <div className="container section-title" data-aos="fade-up">
       <h2>Our Services</h2>
       <p>We offer solutions designed to make your shipping experience smooth and transparent.</p>
-      </div>
+      </div> */}
       {/* End Section Title */}
 
       <div className="container">
-        <div className="row gy-4">
+        <div className="row">
           {constructionData.map((item, index) => (
             <ServiceCard
               key={index}

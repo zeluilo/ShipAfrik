@@ -148,24 +148,20 @@ const CompareQuotes = () => {
     return (
         <section id="constructions" className="constructions section bg-dark min-vh-100 d-flex" style={{ textAlign: 'center' }}>
             <div className="container section-title" data-aos="fade-up">
-                <h2 style={{ marginTop: '50px', color: 'white' }}>Welcome to Customer Hub</h2>
-                <p style={{ color: 'white' }}>We offer solutions designed to make your shipping experience smooth and transparent.</p>
-
-                <div className="row py-4">
+                <div className="row py-5">
                     <div className="col-xl-12">
                         <div className="card">
                             <div className="card-body pt-3">
                                 <div className="my-4">
-                                    <div className="modal-header align-content-center justify-content-center">
-                                        <h3 className="modal-title m-1">Your Quotes</h3>
+                                    <div className="modal-header">
+                                        <h3 className="modal-title m-1 text-start" style={{fontWeight: 'bold'}}>Your Quotes</h3>
                                     </div>
                                     <div className="m-3"><strong>{noShipmentsMessage}</strong></div>
                                     <table className="table table-bordered mt-3">
-                                        <thead>
+                                        <thead className="table-secondary">
                                             <tr>
                                                 <th>Shipping Agent</th>
                                                 <th>Estimated Arrival Date</th>
-                                                <th>Destination Port</th>
                                                 <th>Type of Service</th>
                                                 <th>Price</th>
                                                 <th>Action</th>
@@ -177,12 +173,11 @@ const CompareQuotes = () => {
                                                     <tr>
                                                         <td>{`Shipping Agent ${(index + 1)}`}</td>
                                                         <td>{shipment.estimatedArrivalDate ? formatDateToWords(shipment.estimatedArrivalDate) : 'N/A'}</td>
-                                                        <td>{shipment.destinationPort}</td>
                                                         <td>{quotes.serviceType}</td>
                                                         <td>£{shipment.doorToDoorFee || 'N/A'}</td>
                                                         <td>
                                                             <button
-                                                                className="btn btn-outline-info"
+                                                                className="btn btn-outline-warning"
                                                                 onClick={() => handleViewShipmentDetails(shipment)}
                                                             >
                                                                 {selectedShipment === shipment._id ? 'Hide details' : 'Show details'}

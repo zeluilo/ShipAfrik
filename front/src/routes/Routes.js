@@ -8,6 +8,7 @@ import OrderSummary from "../pages/website/pages/Customer/OrderSummary";
 import CompareQuotes from "../pages/website/pages/Customer/CompareQuotes";
 import Country from "../pages/website/pages/Admin/Country";
 import Profile from "../pages/profile/Profile";
+import TrackOrders from "../pages/website/pages/Customer/TrackOrders";
 
 const AppRoutes = () => {
   const { isLoggedIn, currentUser } = useAuth();
@@ -60,6 +61,7 @@ const AppRoutes = () => {
         <Route path="/compare-quotes" element={<CompareQuotes />} />
         <Route path="/countries-cities" element={<Country />}/>
         <Route path="/profile" element={<Profile />} />
+        <Route path="/track-orders" element={<TrackOrders />} />
         </Routes>
     </>
   );

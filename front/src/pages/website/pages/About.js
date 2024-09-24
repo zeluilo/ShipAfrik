@@ -106,7 +106,7 @@ const About = () => {
       <div className="container">
         <div className="row justify-content-between gy-4">
           {/* Left content */}
-          <div className="col-lg-4 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="100">
+          {/* <div className="col-lg-4 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="100">
             <div className="content">
               <h3>About ShipAfrik</h3>
               <p>
@@ -116,12 +116,13 @@ const About = () => {
                 Our platform integrates user-friendly interfaces with powerful tools for both customers and shippers, ensuring efficient and transparent logistics solutions. With ShipAfrik, managing your shipping needs has never been easier.
               </p>
             </div>
-          </div>
+          </div> */}
 
           {/* Right form */}
-          <div className="col-lg-8" data-aos="zoom-out" data-aos-delay="200">
+          <div className="col-lg-12 content" data-aos="zoom-out" data-aos-delay="200">
+          <h3 className='my-0'>Ship To Accra From London</h3>
             <form onSubmit={handleSubmit} className="php-email-form">
-              <h3>Request a Quote</h3>
+              {/* <h3>Request a Quote</h3> */}
               <p>
                 Fill out the form below to get a customized shipping quote. Our team will get back to you with detailed information and options tailored to your needs.
               </p>
@@ -166,16 +167,15 @@ const About = () => {
                             <label htmlFor="serviceType" className="me-2">Type of Service:</label>
                             <select
                               id="serviceType"
-                              className="form-control w-auto"
+                              className="form-control w-50"
                               value={formData.serviceType}
                               onChange={e => handleChange(e)}
                               name="serviceType"
                               required
                             >
                               <option value="">Select service type</option>
-                              <option value="Standard">Standard</option>
-                              <option value="Express">Express</option>
-                              <option value="Overnight">Overnight</option>
+                              <option value="Door to Door">Door to Door</option>
+                              <option value="Warehouse to Door">Warehouse to Door</option>
                             </select>
                           </div>
                         </td>
@@ -188,7 +188,7 @@ const About = () => {
                               type="text"
                               id="pickupPostcode"
                               name="pickupPostcode"
-                              className="form-control"
+                              className="form-control w-50"
                               placeholder="Enter postcode"
                               value={formData.pickupPostcode}
                               onChange={handleChange}
@@ -199,16 +199,17 @@ const About = () => {
                         <td>
                           <div className="d-flex align-items-center">
                             <label htmlFor="destinationCity" className="me-2">Destination City:</label>
-                            <input
-                              type="text"
+                            <select
                               id="destinationCity"
-                              name="destinationCity"
-                              className="form-control"
-                              placeholder="Enter city"
+                              className="form-control w-50"
                               value={formData.destinationCity}
-                              onChange={handleChange}
+                              onChange={e => handleChange(e)}
+                              name="destinationCity"
                               required
-                            />
+                            >
+                              <option value="">Select destination city</option>
+                              <option value="Accra, Ghana">Accra, Ghana</option>
+                            </select>
                           </div>
                         </td>
                       </tr>
@@ -216,7 +217,7 @@ const About = () => {
                   </table>
 
                   {/* Table for Box Sizes */}
-                  <div className="col-xl-12">
+                  <div className="col-xl-6">
                     <table className="table table-borderless table-striped">
                       <thead>
                         <tr>

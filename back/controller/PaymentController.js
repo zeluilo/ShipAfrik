@@ -219,6 +219,34 @@ router.post('/payment-orders', async (req, res) => {
   }
 });
 
+// PUT API to update an order's status
+router.put('/orders/:orderId/status', async (req, res) => {
+  try {
+      const { orderId } = req.params;
+      const { status } = req.body;
+
+      // Validate the status value
+      const validStatuses = ['In Progress', 'Shipped', 'Shipment Has Left the Dock', 'Shipment Has Landed in Ghana', 'Shipment Delivered'];
+      if (!validStatuses.includes(status)) {
+          return res.status(400).json({ message: 'Invalid status value' });
+      }
+
+      // Find the order by ID and update its status
+      const updatedOrder = await Order.findByIdAndUpdate(orderId, { status }, { new: true });
+
+      if (!updatedOrder) {
+          return res.status(404).json({ message: 'Order not found' });
+      }
+
+      // Return a success response with the updated order
+      return res.status(200).json({ message: 'Order status updated successfully', order: updatedOrder });
+  } catch (error) {
+      console.error('Error updating order status:', error);
+      return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 // GET API to fetch orders based on shipment details for the current user
 router.get('/orders/:currentUser', async (req, res) => {
   const { currentUser } = req.params; // Assuming currentUser is passed as a route parameter
@@ -275,6 +303,35 @@ router.get('/orders/:currentUser', async (req, res) => {
       return res.status(500).json({ message: 'Server error' });
   }
 });
+
+// GET API to fetch order by order reference and email
+router.get('/orders', async (req, res) => {
+  const { orderReference, email } = req.query;
+  console.log('Fetching order by order reference and email:', orderReference, email);
+
+  // Check if both orderReference and email are provided
+  if (!orderReference || !email) {
+    return res.status(400).json({ message: 'Order reference and email are required' });
+  }
+
+  try {
+    // Find the order in the database by orderReference and contactEmail
+    const order = await Order.findOne({ orderReference, contactEmail: email });
+    console.log('Order found:', order);
+
+    if (!order) {
+      // Return a 404 status if the order is not found
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Return the order details
+    return res.status(200).json(order);
+  } catch (error) {
+    console.error('Error fetching order:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 function formatPriceForStripe(price) {
   return price * 100; // Convert price to cents (Stripe requires amount in smallest currency unit)
