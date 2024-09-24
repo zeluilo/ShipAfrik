@@ -298,7 +298,7 @@ const Orders = () => {
                                                         className='bi bi-eye-fill'
                                                         style={{ color: 'blue' }}
                                                         data-bs-toggle="modal"
-                                                        data-bs-target="#viewShipmentDetails"
+                                                        data-bs-target="#viewOrders"
                                                         onClick={() => handleViewOrders(order)}
                                                     ></i>
                                                 </td>
@@ -420,7 +420,7 @@ const Orders = () => {
                     </div>
                 </div>
 
-                <div className="modal fade" id="viewShipmentDetails" tabIndex="-1" aria-labelledby="viewShipmentLabel" aria-hidden="true">
+                <div className="modal fade" id="viewOrders" tabIndex="-1" aria-labelledby="viewShipmentLabel" aria-hidden="true">
                     <div className="modal-dialog modal-dialog-scrollable">
                         <div className="modal-content">
                             <div className="modal-header">

@@ -478,7 +478,8 @@ const Availability = () => {
                                                                     type="button"
                                                                     className='bi bi-eye-fill'
                                                                     style={{ color: 'blue' }}
-                                                                    data-bs-toggle="modal" data-bs-target="#viewShipmentDetails"
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#viewShipmentDetails"
                                                                     onClick={() => handleViewShipmentDetails(shipment)}
                                                                 ></i>
                                                             </div>
