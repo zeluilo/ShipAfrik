@@ -25,46 +25,23 @@ const Availability = () => {
         withdraw: false
     });
     const [isDoorToDoorChecked, setIsDoorToDoorChecked] = useState(false);
+    const [isWareHousePostcode, setIsWareHousePostcodeChecked] = useState(false);
     const [isWithdrawn, setIsWithdrawn] = useState(false);
 
     // Handle changes in form inputs
-    const handleCheckboxChange = (e) => setIsDoorToDoorChecked(e.target.checked);
-    // const handleWithdrawChange = (e) => {
-    //     const isChecked = e.target.checked;
-    //     setIsWithdrawn(isChecked); // Update the local state
-    //     setFormData(prevData => ({ ...prevData, withdraw: isChecked })); // Update formData
-    // };
-
-    // Define the handleWithdrawChange function
-    const handleWithdrawChange = async (shipmentId) => {
-        console.log('handleWithdrawChange called with shipmentId:', shipmentId);
-
-        const newWithdrawStatus = !isWithdrawn;
-        // Update the local state (if you're using local state to reflect the UI)
-
-        try {
-            const response = await axios.put(`http://localhost:3001/shipafrik/update-shipment/${shipmentId}`, {
-                withdraw: true
-            });
-            console.log('Database updated successfully:', response.data);
-
-            if (response.status === 200) {
-                console.log('Database updated successfully:', response.data);
-                setIsWithdrawn(newWithdrawStatus);
-            } else {
-                console.log('Update failed:', response.status, response.statusText);
-            }
-        } catch (error) {
-            console.error('Error updating the database:', error);
-            // Optionally revert the checkbox state if the request fails
-            setIsWithdrawn(!newWithdrawStatus);
+    const handleCheckboxChange = (e) => {
+        const { name, checked } = e.target;
+        if (name === "doorToDoor") {
+            setIsDoorToDoorChecked(checked);
+        } else if (name === "wareHousePostcode") {
+            setIsWareHousePostcodeChecked(checked);
         }
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prevData => ({ ...prevData, [name]: value }));
-        setSearchTerm(e.target.value);
+        // setSearchTerm(e.target.value);
 
     };
 
@@ -99,7 +76,7 @@ const Availability = () => {
             userId: currentUser,
             doorToDoorChecked: isDoorToDoorChecked,
             availableCollectionDays: formData.availableCollectionDays.map(date => date.toISOString().split('T')[0]),
-            // withdraw: isWithdrawn
+            withdraw: isWithdrawn
         };
 
         if (isPost) {
@@ -140,7 +117,6 @@ const Availability = () => {
             toast.error('An error occurred. Please try again.');
         }
     };
-
 
     const handleClear = () => {
         setFormData({
@@ -253,16 +229,6 @@ const Availability = () => {
         setPage(1);
     };
 
-    const handleStatusFilterChange = (e) => {
-        setStatusFilter(e.target.value);
-        setPage(1);
-    };
-
-    const handleSortChange = (e) => {
-        setSortBy(e.target.value);
-        setPage(1);
-    };
-
     const formatDateToWords = (dateString) => {
         const date = new Date(dateString);
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -272,6 +238,30 @@ const Availability = () => {
     const [showCreateShipment, setShowCreateShipment] = useState(false);
     const [showEditShipment, setShowEditShipment] = useState(false);
     const [shipment, setShipment] = useState(null);
+    const [postcodeDetails, setPostcodeDetails] = useState({ region: '', country: '' });
+    const [postcodeSuccess, setPostcodeSuccess] = useState('');
+    const [postcodeError, setPostcodeError] = useState('');
+
+    // Postcode Lookup
+    const postCodeLookUp = async () => {
+        setPostcodeError('');
+        setPostcodeSuccess('');
+        setPostcodeDetails({ region: '', country: '' }); // Clear previous details
+
+        if (!formData.warehousePostcode) {
+            setPostcodeError('Please enter a postcode.');
+            return;
+        }
+
+        try {
+            const response = await axios.get(`https://api.postcodes.io/postcodes/${formData.warehousePostcode}`);
+            const { region, country } = response.data.result;
+            setPostcodeDetails({ region, country });
+            setPostcodeSuccess('Postcode lookup successful.'); // Set success message
+        } catch (error) {
+            setPostcodeError('Invalid postcode or postcode lookup failed.'); // Set error if lookup fails
+        }
+    };
 
     const handleCreateShipment = () => {
         setShowCreateShipment(true);
@@ -367,13 +357,15 @@ const Availability = () => {
             const response = await axios.get('http://localhost:3001/shipafrik/get-countries');
             const countries = response.data;
 
-            // Combine countries and cities into a single list for react-select options
-            const combined = countries.flatMap(country => [
-                { value: country.name, label: country.name }, // country option
-                ...country.cities.map(city => ({ value: `${city.name}, ${country.name}`, label: `${city.name}, ${country.name}` })) // city options
-            ]);
+            // Combine cities with their respective countries into a single list for react-select options
+            const combined = countries.flatMap(country =>
+                country.cities.map(city => ({
+                    value: `${city.name}, ${country.name}`, // city, country combined as value
+                    label: `${city.name}, ${country.name}`  // city, country combined as label
+                }))
+            );
 
-            setData(combined);
+            setData(combined); // Set the combined city-country list for Select component
         } catch (error) {
             console.error('Error fetching countries and cities:', error);
         }
@@ -384,9 +376,35 @@ const Availability = () => {
         setFormData(prevData => ({ ...prevData, destinationPort: selectedOption ? selectedOption.value : '' }));
     };
 
-    // const filteredItems = data.filter(item =>
-    //     item.toLowerCase().includes(searchTerm.toLowerCase())
-    // );
+    const updateWithdrawStatus = async (shipmentId, newWithdrawStatus) => {
+        try {
+            const response = await axios.put(`http://localhost:3001/shipafrik/update-shipment-withdraw/${shipmentId}`, {
+                withdraw: newWithdrawStatus
+            });
+
+            if (response.status === 200) {
+                console.log('Withdraw status updated successfully:', response.data);
+                setFormData(prevData => ({
+                    ...prevData,
+                    withdraw: newWithdrawStatus
+                }));
+                // toast.success('Withdraw status updated successfully!');
+                fetchShipments()
+            } else {
+                console.error('Error updating withdraw status:', response.status);
+                // toast.error('Failed to update withdraw status.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            // toast.error('An error occurred while updating withdraw status.');
+        }
+    };
+
+    // Example usage for calling the function when a button is clicked
+    const handleWithdrawClick = (shipmentId) => {
+        const newWithdrawStatus = !formData.withdraw; // Toggle the withdraw status
+        updateWithdrawStatus(shipmentId, newWithdrawStatus);
+    };
 
 
     return (
@@ -445,6 +463,7 @@ const Availability = () => {
                                             <th>Large</th>
                                             <th>Barrels</th>
                                             <th>Action</th>
+                                            <th>Withdrawn</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -455,7 +474,7 @@ const Availability = () => {
                                             const barrelBox = shipment.boxSizes.find(box => box.size === 'Standard Barrel') || {};
 
                                             return (
-                                                <tr key={shipment.id}>
+                                                <tr key={shipment._id}>
                                                     <td>{(index + 1) + (page - 1) * pageSize}</td>
                                                     <td>{shipment.datePosted ? formatDateToWords(shipment.datePosted) : 'Not Posted Yet'}</td>
                                                     <td>{formatDateToWords(shipment.estimatedVesselDepartureDate)}</td>
@@ -478,7 +497,7 @@ const Availability = () => {
                                                                     type="button"
                                                                     className='bi bi-eye-fill'
                                                                     style={{ color: 'blue' }}
-                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-toggle="modal"
                                                                     data-bs-target="#viewShipmentDetails"
                                                                     onClick={() => handleViewShipmentDetails(shipment)}
                                                                 ></i>
@@ -495,6 +514,7 @@ const Availability = () => {
                                                             </div>
                                                         </div>
                                                     </td>
+                                                    <td>{shipment.withdraw ? 'Withdrawn' : 'Active'}</td>
                                                 </tr>
                                             );
                                         })}
@@ -571,32 +591,101 @@ const Availability = () => {
                                                 />
                                             </td>
                                         </tr>
-                                        <tr>
-                                            <td><label>Warehouse Postcode</label></td>
-                                            <td><input type="text" name='warehousePostcode' className="form-control"
-                                                value={formData.warehousePostcode} onChange={handleChange} placeholder="Enter warehouse postcode" required /></td>
-                                        </tr>
+
                                         <tr>
                                             <td>
-                                                <input className="form-check-input mx-2" type="checkbox" checked={isDoorToDoorChecked}
-                                                    onChange={handleCheckboxChange} />
+                                                <input
+                                                    className="form-check-input mx-2"
+                                                    type="checkbox"
+                                                    name="doorToDoor"
+                                                    checked={isDoorToDoorChecked}
+                                                    onChange={handleCheckboxChange}
+                                                />
                                                 <label>Door To Door</label>
                                             </td>
                                         </tr>
+                                        <tr>
+                                            <td>
+                                                <input
+                                                    className="form-check-input mx-2"
+                                                    type="checkbox"
+                                                    name="wareHousePostcode"
+                                                    checked={isWareHousePostcode}
+                                                    onChange={handleCheckboxChange}
+                                                />
+                                                <label>WareHouse Postcode</label>
+
+                                            </td>
+                                        </tr>
+                                        {isWareHousePostcode && (
+                                            <tr>
+                                                <td><label>Warehouse Postcode</label></td>
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        name="warehousePostcode"
+                                                        className="form-control w-100"
+                                                        value={formData.warehousePostcode}
+                                                        onChange={handleChange}
+                                                        placeholder="Enter warehouse postcode"
+                                                        required
+                                                    />
+
+                                                    <button type="button" className="form-control btn btn-secondary my-2" onClick={postCodeLookUp}>Postcode</button>
+                                                    {postcodeDetails.region && (
+                                                        <div className="mt-2">
+                                                            <strong>Region:</strong> {postcodeDetails.region} <br />
+                                                            <strong>Country:</strong> {postcodeDetails.country}
+                                                        </div>
+                                                    )}
+
+                                                    {postcodeSuccess && (
+                                                        <div className="mt-2 text-success">
+                                                            {postcodeSuccess}
+                                                        </div>
+                                                    )}
+
+                                                    {postcodeError && (
+                                                        <div className="mt-2 text-danger">
+                                                            {postcodeError}
+                                                        </div>
+                                                    )}
+                                                </td>
+
+                                            </tr>
+                                        )}
                                         {isDoorToDoorChecked && (
                                             <>
                                                 <tr>
                                                     <td><label>Door to Door Fee</label></td>
-                                                    <td><input type="text" name='doorToDoorFee' className="form-control"
-                                                        value={formData.doorToDoorFee} onChange={handleChange} placeholder="Enter door to door fee" required /></td>
+                                                    <td><input
+                                                        type="text"
+                                                        name="doorToDoorFee"
+                                                        className="form-control"
+                                                        value={formData.doorToDoorFee}
+                                                        onChange={handleChange}
+                                                        placeholder="Enter door to door fee"
+                                                        required
+                                                    /></td>
                                                 </tr>
                                                 <tr>
                                                     <td><label>Pickup Radius</label></td>
-                                                    <td><input type="text" name='pickupRadius' className="form-control"
-                                                        value={formData.pickupRadius} onChange={handleChange} placeholder="Enter pickup radius" required /></td>
+                                                    <td><input
+                                                        type="text"
+                                                        name="pickupRadius"
+                                                        className="form-control"
+                                                        value={formData.pickupRadius}
+                                                        onChange={handleChange}
+                                                        placeholder="Enter pickup radius"
+                                                        required
+                                                    /></td>
                                                 </tr>
                                             </>
                                         )}
+
+
+
+
                                     </tbody>
 
                                 </table>
@@ -628,21 +717,25 @@ const Availability = () => {
                                 </table>
                                 <table className="table table-borderless">
                                     <tbody>
-                                        <tr>
-                                            <td><p>Available Collection Days</p></td>
-                                            <td>
-                                                <DatePicker
-                                                    selected={formData.availableCollectionDays[0]}
-                                                    onChange={handleDateChange}
-                                                    selectsRange
-                                                    startDate={formData.availableCollectionDays[0]}
-                                                    endDate={formData.availableCollectionDays[1]}
-                                                    inline
-                                                    minDate={formData.estimatedArrivalDate ? new Date(formData.estimatedArrivalDate) : new Date()}
-                                                    dateFormat="yyyy-MM-dd"
-                                                />
-                                            </td>
-                                        </tr>
+                                        {isDoorToDoorChecked && (
+                                            <>
+                                                <tr>
+                                                    <td><p>Available Collection Days</p></td>
+                                                    <td>
+                                                        <DatePicker
+                                                            selected={formData.availableCollectionDays[0]}
+                                                            onChange={handleDateChange}
+                                                            selectsRange
+                                                            startDate={formData.availableCollectionDays[0]}
+                                                            endDate={formData.availableCollectionDays[1]}
+                                                            inline
+                                                            minDate={formData.estimatedArrivalDate ? new Date(formData.estimatedArrivalDate) : new Date()}
+                                                            dateFormat="yyyy-MM-dd"
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            </>
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -669,15 +762,14 @@ const Availability = () => {
                                     Post
                                 </button>
 
-                                {/* Withdraw button */}
                                 <button
                                     type="button"
-                                    className="btn btn-warning mx-2"
-                                    style={{ width: '150px' }}
-                                    onClick={(e) => handleSubmit(e, false, true)} // Call handleSubmit for withdraw
+                                    className="btn btn-warning"
+                                    onClick={() => handleWithdrawClick(shipment._id)}
                                 >
-                                    {isWithdrawn ? 'Reinstate' : 'Withdraw'} {/* Change button text based on state */}
+                                    {formData.withdraw ? 'Reinstate' : 'Withdraw'}
                                 </button>
+
 
                                 <button
                                     type="button"

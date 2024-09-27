@@ -108,7 +108,7 @@ const Orders = () => {
             case 'orderRefDesc':
                 return sortedOrders.sort((a, b) => b.orderReference.localeCompare(a.orderReference));
             case 'serviceType':
-                return sortedOrders.sort((a, b) => a.serviceType.localeCompare(b.serviceType));
+                return sortedOrders.sort((a, b) => a.quotes[0].serviceType.localeCompare(b.quotes[0].serviceType));
             case 'plannedDateAsc':
                 return sortedOrders.sort((a, b) => new Date(a.preferredCollectionDate) - new Date(b.preferredCollectionDate));
             case 'plannedDateDesc':
@@ -218,20 +218,20 @@ const Orders = () => {
                         </div>
                     </div>
 
+                    {/* Search Bar */}
+                    <div className="row align-items-end justify-content-end">
+
+                        <div className="col-sm-3 d-flex align-items-center my-md-1">
+                            <i className="bi bi-search me-2" style={{ fontSize: '1.2em', color: '#007bff' }}></i>
+                            <input type="text" placeholder="Search by Order Reference" value={searchTerm} onChange={handleSearch} className="form-control" />
+                        </div>
+                    </div>
+
                     {/* In Progress Orders Table */}
                     <div className="row">
                         <div className="col-xl-12">
                             <div className="card-body pt-3">
-                                <h5 className="card-title text-start">In Progress Orders</h5>
-
-                                {/* Search Bar */}
-                                <div className="row align-items-end justify-content-end">
-
-                                    <div className="col-sm-3 d-flex align-items-center my-3">
-                                        <i className="bi bi-search me-2" style={{ fontSize: '1.2em', color: '#007bff' }}></i>
-                                        <input type="text" placeholder="Search by Order Reference" value={searchTerm} onChange={handleSearch} className="form-control" />
-                                    </div>
-                                </div>
+                                <h5 className="card-title text-start"><strong>Orders - In Progress</strong></h5>
 
                                 {/* Filter and Sort Options */}
                                 <div className="row mb-3 align-items-end justify-content-end">
@@ -246,6 +246,7 @@ const Orders = () => {
                                         >
                                             <option value="orderRefAsc">Order Reference (A to Z)</option>
                                             <option value="orderRefDesc">Order Reference (Z to A)</option>
+                                            <option value="serviceType">Type of Service</option>
                                             <option value="plannedDateAsc">Planned Date (Earliest to Latest)</option>
                                             <option value="plannedDateDesc">Planned Date (Latest to Earliest)</option>
                                             <option value="revenueAsc">Revenue (Low to High)</option>
@@ -255,7 +256,7 @@ const Orders = () => {
                                     </div>
 
                                     <div className="col-sm-6 d-flex align-items-center">
-                                        <label htmlFor="serviceType" className="col-form-label me-2">Service Type:</label>
+                                        <label htmlFor="serviceType" className="col-form-label me-2">Filter By:</label>
                                         <i className="bi bi-tags me-2" style={{ fontSize: '1.2em', color: '#007bff' }}></i>
                                         <select
                                             id="serviceType"
@@ -331,7 +332,7 @@ const Orders = () => {
                     <div className="row">
                         <div className="col-xl-12">
                             <div className="card-body pt-3">
-                                <h5 className="card-title text-start">Shipped Orders</h5>
+                                <h5 className="card-title text-start"><strong>Orders - Shipped</strong></h5>
 
                                 {/* Sort Options */}
                                 <div className="row mb-3 align-items-end justify-content-end">
@@ -384,7 +385,7 @@ const Orders = () => {
                                                             className='bi bi-eye-fill'
                                                             style={{ color: 'blue' }}
                                                             data-bs-toggle="modal"
-                                                            data-bs-target="#viewShipmentDetails"
+                                                            data-bs-target="#viewOrders"
                                                             onClick={() => handleViewOrders(order)}
                                                         ></i>
                                                     </td>
@@ -478,8 +479,8 @@ const Orders = () => {
                                         {/* Additional Details for Shipped Status */}
                                         {["Shipped", "Shipment Has Left the Dock", "Shipment Has Landed in Ghana", "Shipment Delivered"].includes(selectedOrder.status) && (
                                             <>
-                                            <label htmlFor="statusSelect" className="form-label"><strong>Shipment Detaiks</strong></label>
-                                            <table className="table">
+                                                <label htmlFor="statusSelect" className="form-label"><strong>Shipment Detaiks</strong></label>
+                                                <table className="table">
                                                     <tbody>
                                                         <tr>
                                                             <td><strong>Estimated Arrival Date:</strong></td>
@@ -499,7 +500,7 @@ const Orders = () => {
                                                         </tr>
                                                     </tbody>
                                                 </table>
-                                                </>
+                                            </>
                                         )}
 
 

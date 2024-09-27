@@ -122,7 +122,12 @@ const Sidebar = () => {
                         </li>
                         <li className={`nav-item ${isActive('/admin-dashboard/countries-cities') ? 'active' : ''}`}>
                             <Link to="/admin-dashboard/countries-cities">
-                                <FaCalendarDay className="me-2" /><span>Country/Cities</span>
+                                <FaCalendarDay/><span>Country/Cities</span>
+                            </Link>
+                        </li>
+                        <li className={`nav-item ${isActive('/admin-dashboard/service-type') ? 'active' : ''}`}>
+                            <Link to="/admin-dashboard/service-type">
+                                <FaCalendarDay/><span>Type of Service</span>
                             </Link>
                         </li>
 

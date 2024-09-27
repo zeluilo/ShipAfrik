@@ -27,9 +27,6 @@ const ShipperHub = () => {
                                     <li className="nav-item">
                                         <button className="nav-link" data-bs-toggle="tab" data-bs-target="#profile-edit">My Shipments</button>
                                     </li>
-                                    <li className="nav-item">
-                                        <button className="nav-link" data-bs-toggle="tab" data-bs-target="#profile-edit">My Availability</button>
-                                    </li>
                                 </ul>
 
                                 <div className="tab-content pt-2">

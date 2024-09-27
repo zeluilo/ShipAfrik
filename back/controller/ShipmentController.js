@@ -68,7 +68,6 @@ router.put('/update-shipment/:id', async (req, res) => {
             boxSizes,
             datePosted,
             availableCollectionDays,
-            withdraw
         } = req.body;
 
         // Log the incoming request
@@ -87,7 +86,6 @@ router.put('/update-shipment/:id', async (req, res) => {
                 boxSizes,
                 datePosted,
                 availableCollectionDays,
-                withdraw
             },
             { new: true } // Return the updated document
         );
@@ -127,7 +125,6 @@ router.get('/shipments', async (req, res) => {
         res.status(500).json({ message: 'Error fetching shipments', error: error.message });
     }
 });
-
 
 // GET shipments by userId
 router.get('/shipments/:userId', async (req, res) => {
@@ -304,5 +301,28 @@ router.get('/quotes/:userId', async (req, res) => {
         res.status(500).json({ message: 'Error fetching quotes', error: error.message });
     }
 });
+
+// Update shipment withdrawal status
+router.put('/update-shipment-withdraw/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log('Updating id: ', id)
+
+        const shipment = await Shipment.findByIdAndUpdate(
+            id,
+            { withdraw: req.body.withdraw }, // Update only the withdraw field
+            { new: true }
+        );
+        
+        if (!shipment) {
+            return res.status(404).json({ message: 'Shipment not found' });
+        }
+
+        res.json({ message: 'Withdraw status updated successfully', shipment });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating shipment withdraw status', error });
+    }
+});
+
 
 module.exports = router;
