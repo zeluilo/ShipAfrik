@@ -1,1 +1,1 @@
-web: cd back && npm install && npm start
+web: npm start
