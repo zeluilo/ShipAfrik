@@ -43,7 +43,7 @@ function Header() {
     const fetchData = async () => {
       try {
         setLoading(true); // Set loading to true before fetching data
-        const response = await axios.get(`${ip}/shipafrik/user/${currentUser}`);
+        const response = await axios.get(`http://localhost:3003/shipafrik/user/${currentUser}`);
         console.log('User Data:', response.data);
         setUser(response.data);
       } catch (error) {

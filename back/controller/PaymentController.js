@@ -230,6 +230,7 @@ router.post('/payment-orders', async (req, res) => {
     res.status(201).json({ 
       message: 'Order created successfully', 
       clientSecret: paymentIntent.client_secret,
+      
       order: newOrder
     });
   } catch (error) {

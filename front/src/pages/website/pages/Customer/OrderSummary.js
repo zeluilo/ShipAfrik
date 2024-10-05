@@ -139,7 +139,7 @@ const OrderSummary = () => {
             console.log('Order Data:', orderData);
 
             // Send order data to server to create order and Payment Intent
-            const response = await axios.post(`${process.env.REACT_APP_API_URL}/payment-orders`, orderData);
+            const response = await axios.post(`http://localhost:3003/shipafrik/payment-orders`, orderData);
             const { clientSecret, paymentIntent, order } = response.data;
 
             console.log('Payment Response: ', response.data);
