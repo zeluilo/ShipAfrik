@@ -39,7 +39,7 @@ function Login() {
       console.log('Attempting login...');
 
       // Authenticate user with server
-      const response = await axios.post('http://localhost:3003/shipafrik/login', { email, password });
+      const response = await axios.post(`${ip}/shipafrik/login`, { email, password });
       console.log('Response: ', response.data);
 
       const { token, user } = response.data;
@@ -55,7 +55,7 @@ function Login() {
       login(user, token, tokenExpiration);
       setAuthData({ user, token, tokenExpiration });
       
-      const userResponse = await axios.get(`http://localhost:3003/shipafrik/user/${user}`);
+      const userResponse = await axios.get(`${ip}/shipafrik/user/${user}`);
       console.log('User Data:', userResponse.data)
 
       if (userResponse.data.userType === 'SHIPPER') {
