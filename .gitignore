@@ -1,0 +1,8 @@
+
+Intern3
+/Expansify
+node_modules/
+
+
+# Local Netlify folder
+.netlify
