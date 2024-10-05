@@ -8,7 +8,7 @@ const axios = require('axios'); // Importing axios
 const Order = require('../model/Order');
 const Shipment = require('../model/Shipment');
 const Stripe = require('stripe');
-const stripe = Stripe(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);
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 function generateOrderReference() {
   // Get current timestamp, convert to base-36 and slice last 6 characters
