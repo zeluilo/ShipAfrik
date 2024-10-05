@@ -1,1 +1,1 @@
-export const ip = "https://sayituniverse-591e2b0b306b.herokuapp.com";
+export const ip = "https://shipafrik-f15ec4e35a46.herokuapp.com";

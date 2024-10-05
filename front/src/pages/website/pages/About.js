@@ -43,7 +43,7 @@ const About = () => {
         const response = await axios.get(`${ip}/shipafrik/get-service-types`);
         setServiceTypes(response.data);
       } catch (error) {
-        toast.error('Failed to load service types');
+        // toast.error('Failed to load service types');
       }
     };
     fetchServiceTypes();

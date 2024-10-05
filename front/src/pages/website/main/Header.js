@@ -8,6 +8,7 @@ import PureCounter from '@srexi/purecounterjs';
 import Swiper from 'swiper';
 import { useAuth } from "../../../components/Context";
 import axios from 'axios';
+import { ip } from '../../constants';
 
 function Header() {
   const { isLoggedIn, logout, currentUser } = useAuth();
@@ -42,7 +43,7 @@ function Header() {
     const fetchData = async () => {
       try {
         setLoading(true); // Set loading to true before fetching data
-        const response = await axios.get(`http://localhost:3001/shipafrik/user/${currentUser}`);
+        const response = await axios.get(`${ip}/shipafrik/user/${currentUser}`);
         console.log('User Data:', response.data);
         setUser(response.data);
       } catch (error) {
