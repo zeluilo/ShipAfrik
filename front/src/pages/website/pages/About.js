@@ -5,6 +5,7 @@ import { useAuth } from "../../../components/Context";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
+import { ip } from "../../constants";
 
 const About = () => {
   const { isLoggedIn, currentUser } = useAuth();
@@ -13,12 +14,11 @@ const About = () => {
 
   const [formData, setFormData] = useState({
     boxSizes: [
-      { size: 'Small', quantity: '' },
+      { size: 'Standard', quantity: '' },
       { size: 'Medium', quantity: '' },
       { size: 'Large', quantity: '' },
-      { size: 'Standard Barrel', quantity: '' },
     ],
-    serviceType: '',
+    serviceType: [],
     pickupPostcode: '',
     destinationCity: '',
     collectBy: '',
@@ -26,6 +26,11 @@ const About = () => {
   });
 
   const [serviceTypes, setServiceTypes] = useState([]);
+  const [showOptions, setShowOptions] = useState(false); // State to control dropdown visibility
+  const toggleOptions = () => {
+    setShowOptions((prev) => !prev);
+  };
+
   const [postcodeDetails, setPostcodeDetails] = useState({ region: '', country: '' });
   const [postcodeSuccess, setPostcodeSuccess] = useState('');
   const [postcodeError, setPostcodeError] = useState('');
@@ -35,7 +40,7 @@ const About = () => {
   useEffect(() => {
     const fetchServiceTypes = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/shipafrik/get-service-types');
+        const response = await axios.get(`${ip}/shipafrik/get-service-types`);
         setServiceTypes(response.data);
       } catch (error) {
         toast.error('Failed to load service types');
@@ -44,10 +49,28 @@ const About = () => {
     fetchServiceTypes();
   }, []);
 
-  // Handle changes in form inputs
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prevData => ({ ...prevData, [name]: value }));
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
+
+    if (type === "checkbox") {
+      // Handle service type checkboxes
+      setFormData((prevData) => {
+        const serviceTypes = checked
+          ? [...prevData.serviceType, value] // Add the value if checked
+          : prevData.serviceType.filter((type) => type !== value); // Remove the value if unchecked
+
+        return {
+          ...prevData,
+          serviceType: serviceTypes,
+        };
+      });
+    } else {
+      // Handle other input fields
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: value, // Update the field based on name attribute
+      }));
+    }
   };
 
   const handleDateChange = (field, date) => {
@@ -96,10 +119,12 @@ const About = () => {
     const payload = { ...formData, userId: currentUser };
     if (isLoggedIn) {
       try {
-        const response = await axios.post('http://localhost:3001/shipafrik/create-quote', payload, {
+        const response = await axios.post(`${ip}/shipafrik/create-quote`, payload, {
           headers: { 'Content-Type': 'application/json' }
         });
         if (response.status === 201) {
+          localStorage.removeItem('quoteFormData');
+          localStorage.setItem('quoteFormData', JSON.stringify(formData));
           toast.success('Quote request submitted successfully!');
           resetForm();
           navigate('/compare-quotes');
@@ -108,8 +133,16 @@ const About = () => {
         toast.error('Failed to submit quote request.');
       }
     } else {
+      // Clear the form data from localStorage
+      localStorage.removeItem('quoteFormData');
+      
+      // Update localStorage with the new formData
       localStorage.setItem('quoteFormData', JSON.stringify(formData));
+      
       toast.success('Quote details stored successfully in local storage!');
+      
+      // Clear the form data after saving to localStorage
+      resetForm();  // This function will reset the form fields
       navigate('/compare-quotes');
     }
   };
@@ -122,7 +155,7 @@ const About = () => {
         { size: 'Large', quantity: '' },
         { size: 'Standard Barrel', quantity: '' },
       ],
-      serviceType: '',
+      serviceType: [],
       pickupPostcode: '',
       destinationCity: '',
       collectBy: '',
@@ -138,7 +171,7 @@ const About = () => {
   // Fetch countries and cities
   const fetchCountriesAndCities = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/shipafrik/get-countries');
+      const response = await axios.get(`${ip}/shipafrik/get-countries`);
       const countries = response.data;
 
       // Combine cities with their respective countries into a single list for react-select options
@@ -199,22 +232,37 @@ const About = () => {
                           </div>
                         </td>
                         <td>
-                          <div className="d-flex align-items-center">
-                            <label htmlFor="serviceType" className="me-2">Type of Service:</label>
-                            <select
-                              id="serviceType"
-                              className="form-control w-50"
-                              value={formData.serviceType}
-                              onChange={handleChange}
-                              name="serviceType"
-                              required
-                            >
-                              <option value="">Select service type</option>
-                              {serviceTypes.map((type, index) => (
-                                <option key={index} value={type.name}>{type.name}</option>
-                              ))}
-                            </select>
+                          <div className="d-flex flex-column">
+                            <label htmlFor="serviceType" className="mb-2">Type of Service:</label>
+                            <div className="form-control" onClick={toggleOptions} style={{ cursor: 'pointer', border: '1px solid #ccc', padding: '10px', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+                              <span>{formData.serviceType.length > 0 ? formData.serviceType.join(', ') : 'Select Service Type'}</span>
+                            </div>
+                            {showOptions && (
+                              <div className="dropdown-menu show" style={{ position: 'absolute', zIndex: 1000, backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '5px', marginTop: '80px', padding: '10px' }}>
+                                {serviceTypes.length > 0 ? (
+                                  serviceTypes.map((type, index) => (
+                                    <div key={index} className="form-check">
+                                      <input
+                                        type="checkbox"
+                                        id={`serviceType${index}`}
+                                        name="serviceType"
+                                        value={type.name}
+                                        className="form-check-input"
+                                        checked={formData.serviceType.includes(type.name)}
+                                        onChange={handleChange}
+                                      />
+                                      <label htmlFor={`serviceType${index}`} className="form-check-label">
+                                        {type.name}
+                                      </label>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p>No service types available.</p>
+                                )}
+                              </div>
+                            )}
                           </div>
+
                         </td>
                       </tr>
                       <tr>
@@ -268,7 +316,7 @@ const About = () => {
                               <option value="">Select destination city</option>
                               {data.map((option, index) => (
                                 <option key={index} value={option.value}>
-                                 {option.label}
+                                  {option.label}
                                 </option>
                               ))}
                             </select>

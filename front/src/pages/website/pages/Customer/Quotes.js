@@ -5,6 +5,8 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import QuotesTable from './QuotesTable'; // Import the new table component
+import { ip } from "../../../constants";
 
 const Quotes = () => {
     const { currentUser } = useAuth();
@@ -27,10 +29,17 @@ const Quotes = () => {
             setLoading(true); // Set loading to true before fetching data
 
             // Fetch quotes
-            const quotesResponse = await axios.get(`http://localhost:3001/shipafrik/quotes/${currentUser}`);
+            const quotesResponse = await axios.get(`${ip}/shipafrik/quotes/${currentUser}`);
             const quotes = quotesResponse.data;
             setQuotes(quotes);
             console.log('Quotes:', quotes);
+
+            // Check if no shipments are found
+            if (quotes.length === 0) {
+                setNoQuotesMessage('No shipments found.');
+            } else {
+                setNoQuotesMessage('');
+            }
 
             setTotalPages(Math.ceil(quotes.length / pageSize));
         } catch (error) {
@@ -47,7 +56,7 @@ const Quotes = () => {
 
 
         // Fetch all shipments
-        const shipmentsResponse = await axios.get('http://localhost:3001/shipafrik/shipments');
+        const shipmentsResponse = await axios.get(`${ip}/shipafrik/shipments`);
         const shipments = shipmentsResponse.data;
         console.log('Shipments:', shipments);
 
@@ -193,7 +202,7 @@ const Quotes = () => {
     const handleViewShipmentDetails = async (shipment) => {
         try {
             // Optionally, fetch additional details about the shipment if needed
-            const response = await axios.get(`http://localhost:3001/shipafrik/get-shipment/${shipment._id}`);
+            const response = await axios.get(`${ip}/shipafrik/get-shipment/${shipment._id}`);
             const shipmentDetails = response.data;
             // Toggle details visibility based on current state
             if (selectedShipment === shipment._id) {
@@ -223,6 +232,30 @@ const Quotes = () => {
         window.scrollTo(0, 0);
         navigate('/order-summary', { state: { selectedShipment, quote } });
     };
+
+    const handleDeleteQuote = async (quoteId) => {
+        try {
+            // Make a DELETE request to delete the quote by its ID
+            const response = await axios.delete(`${ip}/shipafrik/delete-quote/${quoteId}`);
+
+            if (response.status === 200) {
+                // Handle successful deletion (e.g., remove the deleted quote from the UI)
+                console.log('Quote deleted successfully:', response.data);
+                await fetchQuotes()
+
+                // Check if no quotes are found after filtering
+                if (quotes.length === 0) {
+                    setNoQuotesMessage('No quotes found.');
+                } else {
+                    setNoQuotesMessage('');
+                }
+            }
+        } catch (error) {
+            console.error('Error deleting quote:', error);
+            // Optionally, show an error message to the user
+        }
+    };
+
     return (
         <>
             <div className="datatable-top">
@@ -273,19 +306,17 @@ const Quotes = () => {
                                             <th>Destination City</th>
                                             <th>Collect By</th>
                                             <th>Arrive By</th>
-                                            <th>Small</th>
+                                            <th>Standard</th>
                                             <th>Medium</th>
                                             <th>Large</th>
-                                            <th>Barrel</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {filteredQuotes.map((quote, index) => {
-                                            const smallBox = quote.boxSizes.find(box => box.size === 'Small') || {};
+                                            const standardBox = quote.boxSizes.find(box => box.size === 'Standard') || {};
                                             const mediumBox = quote.boxSizes.find(box => box.size === 'Medium') || {};
                                             const largeBox = quote.boxSizes.find(box => box.size === 'Large') || {};
-                                            const barrelBox = quote.boxSizes.find(box => box.size === 'Standard Barrel') || {};
 
                                             return (
                                                 <tr key={quote.id}>
@@ -293,10 +324,9 @@ const Quotes = () => {
                                                     <td>{quote.destinationCity}</td>
                                                     <td>{formatDateToWords(quote.collectBy)}</td>
                                                     <td>{formatDateToWords(quote.arriveBy)}</td>
-                                                    <td>{smallBox.quantity || '-'}</td>
+                                                    <td>{standardBox.quantity || '-'}</td>
                                                     <td>{mediumBox.quantity || '-'}</td>
                                                     <td>{largeBox.quantity || '-'}</td>
-                                                    <td>{barrelBox.quantity || '-'}</td>
 
                                                     <td>
                                                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
@@ -312,12 +342,11 @@ const Quotes = () => {
                                                                 <i
                                                                     type="button"
                                                                     className='bi bi-trash-fill'
-                                                                    // onClick={() => handleOpenDeleteModal(quote._id)} // Pass the quote ID to the handler
-                                                                    data-bs-toggle="modal"
+                                                                    onClick={() => handleDeleteQuote(quote._id)} // Call the delete handler with the quote ID
                                                                     style={{ color: 'red' }}
-                                                                    data-bs-target="#delete"
                                                                 ></i>
                                                             </div>
+
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -325,7 +354,7 @@ const Quotes = () => {
                                         })}
                                     </tbody>
                                 </table>
-                                <div className="pagination-controls">
+                                <div className="pagination-controls my-4">
                                     <button disabled={page === 1} onClick={() => setPage(page - 1)}>{'<'}</button>
                                     <span> Page {page} of {totalPages} </span>
                                     <button className="pagination-controls" disabled={page === totalPages} onClick={() => setPage(page + 1)}>{'>'}</button>
@@ -341,152 +370,16 @@ const Quotes = () => {
                                         <h3 className="modal-title m-1">Your Quotes</h3>
                                         <button type="button" className="btn-close mx-1" onClick={handleGridClick} />
                                     </div>
-                                    <div className="m-3"><strong>{noShipmentsMessage}</strong></div>
-                                    <table className="table table-bordered mt-3">
-                                        <thead>
-                                            <tr>
-                                                <th>Shipping Agent</th>
-                                                <th>Estimated Arrival Date</th>
-                                                <th>Destination Port</th>
-                                                <th>Type of Service</th>
-                                                <th>Price</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {shipments.map((shipment, index) => (
-                                                <React.Fragment key={shipment._id}>
-                                                    <tr>
-                                                        <td>{`Shipping Agent ${(index + 1) + (page - 1) * pageSize}`}</td>
-                                                        <td>{shipment.estimatedArrivalDate ? formatDateToWords(shipment.estimatedArrivalDate) : 'N/A'}</td>
-                                                        <td>{shipment.destinationPort}</td>
-                                                        <td>{quote.serviceType}</td>
-                                                        <td>£{shipment.doorToDoorFee || 'N/A'}</td>
-                                                        <td>
-                                                            <button
-                                                                className="btn btn-outline-info"
-                                                                onClick={() => handleViewShipmentDetails(shipment)}
-                                                            >
-                                                                {selectedShipment === shipment._id ? 'Hide details' : 'Show details'}
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                    {selectedShipment === shipment._id && showDetails && (
-                                                        <tr>
-                                                            <td colSpan="6">
-                                                                <table className="table table-borderless table-sm" style={{ border: '2px solid black', width: '100%' }}>
-                                                                    <tbody>
-                                                                        <tr>
-                                                                            <td className="text-start p-2 m-2">
-                                                                                <i className="bi bi-check-circle-fill" style={{ color: 'green', fontSize: '36px' }}></i>
-                                                                                <span style={{ fontSize: '24px', fontWeight: 'bold' }} className="ms-2">Shipment Overview</span>
-                                                                            </td>
-                                                                        </tr>
-
-                                                                        {/* Shipment Details */}
-                                                                        <tr>
-                                                                            <td colSpan="3">
-                                                                                <div className="shipment-details">
-                                                                                    <h5 style={{ fontWeight: 'bold', marginBottom: '10px', textDecoration: 'underline' }}>Shipment Details</h5>
-                                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                                                                                        <div style={{ flex: '1', marginRight: '10px' }}>
-                                                                                            <p><strong>Estimated Vessel Departure:</strong></p>
-                                                                                            <p style={{ fontSize: '16px', color: '#555' }}>
-                                                                                                {shipment.estimatedVesselDepartureDate ? new Date(shipment.estimatedVesselDepartureDate).toLocaleDateString() : '-'}
-                                                                                            </p>
-                                                                                        </div>
-                                                                                        <div style={{ flex: '1', marginRight: '10px' }}>
-                                                                                            <p><strong>Estimated Arrival Date:</strong></p>
-                                                                                            <p style={{ fontSize: '16px', color: '#555' }}>
-                                                                                                {shipment.estimatedArrivalDate ? new Date(shipment.estimatedArrivalDate).toLocaleDateString() : '-'}
-                                                                                            </p>
-                                                                                        </div>
-                                                                                        <div style={{ flex: '1', marginRight: '10px' }}>
-                                                                                            <p><strong>Destination Port:</strong></p>
-                                                                                            <p style={{ fontSize: '16px', color: '#555' }}>
-                                                                                                {shipment.destinationPort || '-'}
-                                                                                            </p>
-                                                                                        </div>
-                                                                                    </div>
-
-                                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                                                                                        <div style={{ flex: '1', marginRight: '10px' }}>
-                                                                                            <p><strong>Warehouse Postcode:</strong></p>
-                                                                                            <p style={{ fontSize: '16px', color: '#555' }}>
-                                                                                                {shipment.warehousePostcode || '-'}
-                                                                                            </p>
-                                                                                        </div>
-                                                                                        <div style={{ flex: '1', marginRight: '10px' }}>
-                                                                                            <p><strong>Door-to-Door Fee:</strong></p>
-                                                                                            <p style={{ fontSize: '16px', color: '#555' }}>
-                                                                                                £{shipment.doorToDoorFee || '-'}
-                                                                                            </p>
-                                                                                        </div>
-                                                                                        <div style={{ flex: '1', marginRight: '10px' }}>
-                                                                                            <p><strong>Pickup Radius:</strong></p>
-                                                                                            <p style={{ fontSize: '16px', color: '#555' }}>
-                                                                                                {shipment.pickupRadius || '-'}
-                                                                                            </p>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </td>
-                                                                        </tr>
-
-                                                                        {/* Box Sizes and Pricing Table */}
-                                                                        <tr>
-                                                                            <td colSpan="3">
-                                                                                <h5 style={{ textAlign: 'center', fontWeight: 'bold', marginTop: '20px' }}>Package Sizes & Pricing</h5>
-                                                                                <p style={{ textAlign: 'center', fontSize: '14px', color: '#555' }}>Available package sizes and prices below.</p>
-                                                                                <table className="table table-bordered table-sm" style={{ maxWidth: '80%', margin: '0 auto' }}>
-                                                                                    <thead>
-                                                                                        <tr>
-                                                                                            <th>Size</th>
-                                                                                            <th>Price (£)</th>
-                                                                                            <th>Quantity Available</th>
-                                                                                            {/* <th>Requested Quantity</th> */}
-                                                                                        </tr>
-                                                                                    </thead>
-                                                                                    <tbody>
-                                                                                        {shipment.boxSizes.map(box => {
-                                                                                            // const requestedQuantity = quote.reduce((total, q) => {
-                                                                                            //     const boxInQuote = q.boxSizes.find(b => b.size === box.size);
-                                                                                            //     return boxInQuote ? boxInQuote.quantity : 0;
-                                                                                            // }, 0);
-
-                                                                                            return (
-                                                                                                <tr key={box._id}>
-                                                                                                    <td>{box.size || '-'}</td>
-                                                                                                    <td>{box.price || '-'}</td>
-                                                                                                    <td>{box.quantity || '-'}</td>
-                                                                                                    {/* <td>{requestedQuantity || '-'}</td> */}
-                                                                                                </tr>
-                                                                                            );
-                                                                                        })}
-                                                                                    </tbody>
-                                                                                </table>
-
-                                                                            </td>
-                                                                        </tr>
-
-                                                                        {/* Buy Now Button - Moved to the Bottom */}
-                                                                        <tr>
-                                                                            <td className="d-flex justify-content-center align-items-center" style={{ height: '100px' }}>
-                                                                                <button className="btn btn-outline-secondary w-50" onClick={handleBuyNow}
-                                                                                    style={{ fontSize: '18px', padding: '12px 24px' }}>BUY NOW</button>
-                                                                            </td>
-                                                                        </tr>
-                                                                    </tbody>
-                                                                </table>
-
-                                                            </td>
-                                                        </tr>
-
-                                                    )}
-                                                </React.Fragment >
-                                            ))}
-                                        </tbody >
-                                    </table >
+                                    <div className="m-3 text-danger"><strong>{noShipmentsMessage}</strong></div>
+                                    <QuotesTable
+                                        shipments={shipments}
+                                        selectedShipment={selectedShipment}
+                                        showDetails={showDetails}
+                                        handleViewShipmentDetails={handleViewShipmentDetails}
+                                        handleBuyNow={handleBuyNow}
+                                        quotes={quote}
+                                        formatDateToWords={formatDateToWords}
+                                    />
                                 </div >
                             )
                         )}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { ip } from "../constants";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ const RegisterPage = () => {
   
       console.log('Submitting registration form with data:', payload); // Log the form data
   
-      const response = await axios.post('http://localhost:3001/shipafrik/register', payload, {
+      const response = await axios.post(`http://localhost:3001/shipafrik/register`, payload, {
         headers: {
           'Content-Type': 'application/json',
         },

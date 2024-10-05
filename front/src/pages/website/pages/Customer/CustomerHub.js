@@ -26,14 +26,11 @@ const CustomerHub = () => {
                                     <li className="nav-item">
                                         <button className="nav-link" data-bs-toggle="tab" data-bs-target="#profile-edit">My Quotes</button>
                                     </li>
-                                    <li className="nav-item">
-                                        <button className="nav-link" data-bs-toggle="tab" data-bs-target="#profile-edit">Track Shipments</button>
-                                    </li>
                                 </ul>
 
                                 <div className="tab-content pt-2">
                                     <div className="tab-pane fade show active profile-overview" id="profile-overview">
-                                        <h5 className="card-title">Orders - In Progress</h5>
+                                        <h5 className="card-title">Coming Soon...</h5>
                                     </div>
 
                                     <div className="tab-pane fade profile-edit pt-3" id="profile-edit">

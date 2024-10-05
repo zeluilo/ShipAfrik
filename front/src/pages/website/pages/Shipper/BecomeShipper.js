@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from "../../../../components/Context";
+import { ip } from "../../../constants";
 
 const BecomeShipper = () => {
   const { isLoggedIn, currentUser } = useAuth();
@@ -75,7 +76,7 @@ const BecomeShipper = () => {
   
         console.log('Submitting registration form with data:', formData); // Log the form data
   
-        const response = await axios.post('http://localhost:3001/shipafrik/register', formData, {
+        const response = await axios.post(`${ip}/shipafrik/register`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -123,7 +124,7 @@ const BecomeShipper = () => {
   
         console.log('Updating profile image with data:', formData); // Log the form data
   
-        const response = await axios.put(`http://localhost:3001/shipafrik/update-user/${currentUser}`, formData, {
+        const response = await axios.put(`${ip}/shipafrik/update-user/${currentUser}`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },

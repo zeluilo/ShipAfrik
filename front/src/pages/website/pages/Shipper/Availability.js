@@ -5,6 +5,7 @@ import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
+import { ip } from "../../../constants";
 
 const Availability = () => {
     const { currentUser } = useAuth();
@@ -15,11 +16,11 @@ const Availability = () => {
         warehousePostcode: '',
         doorToDoorFee: '',
         pickupRadius: '',
+        latestDropOffDate: '',
         boxSizes: [
-            { size: 'Small', price: '', quantity: '' },
+            { size: 'Standard', price: '', quantity: '' },
             { size: 'Medium', price: '', quantity: '' },
             { size: 'Large', price: '', quantity: '' },
-            { size: 'Standard Barrel', price: '', quantity: '' },
         ],
         availableCollectionDays: [],
         withdraw: false
@@ -71,12 +72,17 @@ const Availability = () => {
             }
         }
 
+        let estimatedDepartureDate = new Date(formData.estimatedVesselDepartureDate);
+        let latestDropOffDate = new Date(estimatedDepartureDate);
+        latestDropOffDate.setDate(estimatedDepartureDate.getDate() + 2);
+
         let payload = {
             ...formData,
             userId: currentUser,
             doorToDoorChecked: isDoorToDoorChecked,
             availableCollectionDays: formData.availableCollectionDays.map(date => date.toISOString().split('T')[0]),
-            withdraw: isWithdrawn
+            withdraw: isWithdrawn,
+            latestDropOffDate: latestDropOffDate.toISOString().split('T')[0] // Format to YYYY-MM-DD
         };
 
         if (isPost) {
@@ -90,14 +96,14 @@ const Availability = () => {
         try {
             let response;
             if (showEditShipment && shipment) {
-                response = await axios.put(`http://localhost:3001/shipafrik/update-shipment/${shipment._id}`, payload, {
+                response = await axios.put(`${ip}/shipafrik/update-shipment/${shipment._id}`, payload, {
                     headers: {
                         'Content-Type': 'application/json',
                     },
                 });
                 console.log('Shipment updated successfully:', response.data);
             } else {
-                response = await axios.post('http://localhost:3001/shipafrik/create-shipment', payload, {
+                response = await axios.post(`${ip}/shipafrik/create-shipment`, payload, {
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -126,11 +132,11 @@ const Availability = () => {
             warehousePostcode: '',
             doorToDoorFee: '',
             pickupRadius: '',
+            latestDropOffDate: '',
             boxSizes: [
-                { size: 'Small', price: '', quantity: '' },
+                { size: 'Standard', price: '', quantity: '' },
                 { size: 'Medium', price: '', quantity: '' },
                 { size: 'Large', price: '', quantity: '' },
-                { size: 'Standard Barrel', price: '', quantity: '' },
             ],
             availableCollectionDays: [],
         });
@@ -155,16 +161,19 @@ const Availability = () => {
     const [data, setData] = useState([]);
     const [search, setSearch] = useState('');
     const [selectedItem, setSelectedItem] = useState('');
+    const [departureDate, setDepartureDate] = useState('')
 
     // Fetch shipments initially
     const fetchShipments = async () => {
         try {
             setLoading(true); // Set loading to true before fetching data
 
-            const response = await axios.get(`http://localhost:3001/shipafrik/shipments/${currentUser}`);
+            const response = await axios.get(`${ip}/shipafrik/shipments/${currentUser}`);
             setShipments(response.data);
             console.log('Shipments: ', response.data)
 
+            // const estimatedDepartureDate = new Date(response.data.estimatedVesselDepartureDate);
+            // const date = estimatedDepartureDate.getDate() - 2;
 
             // Check if no shipments are found
             if (response.data.length === 0) {
@@ -274,7 +283,7 @@ const Availability = () => {
         console.log('Fetching shipment with ID:', id);
         setLoading(true); // Set loading to true
         try {
-            const response = await axios.get(`http://localhost:3001/shipafrik/shipment/${currentUser}/${id}`);
+            const response = await axios.get(`${ip}/shipafrik/shipment/${currentUser}/${id}`);
             setFormData({
                 estimatedVesselDepartureDate: new Date(response.data.estimatedVesselDepartureDate),
                 destinationPort: response.data.destinationPort,
@@ -318,7 +327,7 @@ const Availability = () => {
         }
 
         try {
-            const response = await axios.delete(`http://localhost:3001/shipafrik/delete-shipment/${selectedShipmentId}`);
+            const response = await axios.delete(`${ip}/shipafrik/delete-shipment/${selectedShipmentId}`);
             if (response.status === 200 || response.status === 201) {
                 toast.success(response.data.message || 'Shipment deleted successfully!');
 
@@ -354,7 +363,7 @@ const Availability = () => {
     // Fetch countries and cities
     const fetchCountriesAndCities = async () => {
         try {
-            const response = await axios.get('http://localhost:3001/shipafrik/get-countries');
+            const response = await axios.get(`${ip}/shipafrik/get-countries`);
             const countries = response.data;
 
             // Combine cities with their respective countries into a single list for react-select options
@@ -378,7 +387,7 @@ const Availability = () => {
 
     const updateWithdrawStatus = async (shipmentId, newWithdrawStatus) => {
         try {
-            const response = await axios.put(`http://localhost:3001/shipafrik/update-shipment-withdraw/${shipmentId}`, {
+            const response = await axios.put(`${ip}/shipafrik/update-shipment-withdraw/${shipmentId}`, {
                 withdraw: newWithdrawStatus
             });
 
@@ -456,32 +465,27 @@ const Availability = () => {
                                     <thead>
                                         <tr>
                                             <th>Shipment ID</th>
-                                            <th onClick={() => setSortBy('datePosted')}>Date of Post</th>
                                             <th onClick={() => setSortBy('estimatedVesselDepartureDate')}>Estimated Departure Date</th>
-                                            <th>Small</th>
+                                            <th>Standard</th>
                                             <th>Medium</th>
                                             <th>Large</th>
-                                            <th>Barrels</th>
                                             <th>Action</th>
                                             <th>Withdrawn</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {filteredShipments.slice((page - 1) * pageSize, page * pageSize).map((shipment, index) => {
-                                            const smallBox = shipment.boxSizes.find(box => box.size === 'Small') || {};
+                                            const standardBox = shipment.boxSizes.find(box => box.size === 'Standard') || {};
                                             const mediumBox = shipment.boxSizes.find(box => box.size === 'Medium') || {};
                                             const largeBox = shipment.boxSizes.find(box => box.size === 'Large') || {};
-                                            const barrelBox = shipment.boxSizes.find(box => box.size === 'Standard Barrel') || {};
 
                                             return (
                                                 <tr key={shipment._id}>
                                                     <td>{(index + 1) + (page - 1) * pageSize}</td>
-                                                    <td>{shipment.datePosted ? formatDateToWords(shipment.datePosted) : 'Not Posted Yet'}</td>
                                                     <td>{formatDateToWords(shipment.estimatedVesselDepartureDate)}</td>
-                                                    <td>£{smallBox.price || '-'} ({smallBox.quantity || '-'})</td>
+                                                    <td>£{standardBox.price || '-'} ({standardBox.quantity || '-'})</td>
                                                     <td>£{mediumBox.price || '-'} ({mediumBox.quantity || '-'})</td>
                                                     <td>£{largeBox.price || '-'} ({largeBox.quantity || '-'})</td>
-                                                    <td>£{barrelBox.price || '-'} ({barrelBox.quantity || '-'})</td>
                                                     <td>
                                                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
                                                             <div>
@@ -537,7 +541,7 @@ const Availability = () => {
             </div>
 
             {showCreateShipment && (
-                <div className="my-4">
+                <div className="my-2">
                     <form onSubmit={handleSubmit}>
                         <div className="modal-header align-content-center justify-content-center">
                             <h3 className="modal-title m-1">{showEditShipment ? 'Edit Shipment Availability' : 'Create New Shipment'}</h3>
@@ -591,6 +595,40 @@ const Availability = () => {
                                                 />
                                             </td>
                                         </tr>
+                                        <tr>
+                                            <td><label>WareHouse Postcode</label></td>
+                                            <td>
+                                                <input
+                                                    type="text"
+                                                    name="warehousePostcode"
+                                                    className="form-control w-100"
+                                                    value={formData.warehousePostcode}
+                                                    onChange={handleChange}
+                                                    placeholder="Enter warehouse postcode"
+                                                    required
+                                                />
+
+                                                <button type="button" className="form-control btn btn-secondary my-2" onClick={postCodeLookUp}>Postcode</button>
+                                                {postcodeDetails.region && (
+                                                    <div className="mt-2">
+                                                        <strong>Region:</strong> {postcodeDetails.region} <br />
+                                                        <strong>Country:</strong> {postcodeDetails.country}
+                                                    </div>
+                                                )}
+
+                                                {postcodeSuccess && (
+                                                    <div className="mt-2 text-success">
+                                                        {postcodeSuccess}
+                                                    </div>
+                                                )}
+
+                                                {postcodeError && (
+                                                    <div className="mt-2 text-danger">
+                                                        {postcodeError}
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
 
                                         <tr>
                                             <td>
@@ -604,56 +642,7 @@ const Availability = () => {
                                                 <label>Door To Door</label>
                                             </td>
                                         </tr>
-                                        <tr>
-                                            <td>
-                                                <input
-                                                    className="form-check-input mx-2"
-                                                    type="checkbox"
-                                                    name="wareHousePostcode"
-                                                    checked={isWareHousePostcode}
-                                                    onChange={handleCheckboxChange}
-                                                />
-                                                <label>WareHouse Postcode</label>
 
-                                            </td>
-                                        </tr>
-                                        {isWareHousePostcode && (
-                                            <tr>
-                                                <td><label>Warehouse Postcode</label></td>
-                                                <td>
-                                                    <input
-                                                        type="text"
-                                                        name="warehousePostcode"
-                                                        className="form-control w-100"
-                                                        value={formData.warehousePostcode}
-                                                        onChange={handleChange}
-                                                        placeholder="Enter warehouse postcode"
-                                                        required
-                                                    />
-
-                                                    <button type="button" className="form-control btn btn-secondary my-2" onClick={postCodeLookUp}>Postcode</button>
-                                                    {postcodeDetails.region && (
-                                                        <div className="mt-2">
-                                                            <strong>Region:</strong> {postcodeDetails.region} <br />
-                                                            <strong>Country:</strong> {postcodeDetails.country}
-                                                        </div>
-                                                    )}
-
-                                                    {postcodeSuccess && (
-                                                        <div className="mt-2 text-success">
-                                                            {postcodeSuccess}
-                                                        </div>
-                                                    )}
-
-                                                    {postcodeError && (
-                                                        <div className="mt-2 text-danger">
-                                                            {postcodeError}
-                                                        </div>
-                                                    )}
-                                                </td>
-
-                                            </tr>
-                                        )}
                                         {isDoorToDoorChecked && (
                                             <>
                                                 <tr>
@@ -723,14 +712,14 @@ const Availability = () => {
                                                     <td><p>Available Collection Days</p></td>
                                                     <td>
                                                         <DatePicker
-                                                            selected={formData.availableCollectionDays[0]}
+                                                            selected={departureDate}
                                                             onChange={handleDateChange}
                                                             selectsRange
                                                             startDate={formData.availableCollectionDays[0]}
                                                             endDate={formData.availableCollectionDays[1]}
                                                             inline
-                                                            minDate={formData.estimatedArrivalDate ? new Date(formData.estimatedArrivalDate) : new Date()}
-                                                            dateFormat="yyyy-MM-dd"
+                                                            // maxDate={formData.estimatedVesselDepartureDate ? new Date(formData.estimatedVesselDepartureDate) : new Date()}
+                                                            maxDate={formData.estimatedVesselDepartureDate ? new Date(new Date(formData.estimatedVesselDepartureDate).setDate(new Date(formData.estimatedVesselDepartureDate).getDate() - 3)) : new Date()}                                                            dateFormat="yyyy-MM-dd"
                                                         />
                                                     </td>
                                                 </tr>
@@ -740,16 +729,18 @@ const Availability = () => {
                                 </table>
                             </div>
                         </div>
-                        <div className="row mt-4">
+                        <div className="row">
+                            <div className="text-center my-4">
+                                <strong>Date Posted: </strong>{shipment && shipment.datePosted ? formatDateToWords(shipment.datePosted) : 'Not Posted Yet'}
+                            </div>
                             <div className="col text-center">
-                                {/* Save button: does not save the datePosted */}
-                                <button
+                            <button
                                     type="submit"
                                     className="btn btn-primary mx-2"
                                     style={{ width: '150px' }}
                                     onClick={(e) => handleSubmit(e, false)}
                                 >
-                                    {showEditShipment ? 'Update' : 'Save'}
+                                    {showEditShipment ? 'Update' : 'Draft'}
                                 </button>
 
                                 {/* Post button: saves the current date to datePosted */}

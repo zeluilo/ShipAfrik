@@ -14,7 +14,7 @@ const quoteSchema = new mongoose.Schema({
     },
     boxSizes: [boxSizeSchema],
     dateCreated: { type: Date, default: Date.now },
-    serviceType: { type: String, required: true }, // Added serviceType field
+    serviceType: [{ type: String, required: true }], // Changed to an array of strings
     pickupPostcode: { type: String, required: true }, // Added pickupPostcode field
     destinationCity: { type: String, required: true }, // Added destinationCity field
     collectBy: { type: Date, required: true }, // Added collectBy field

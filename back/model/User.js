@@ -40,7 +40,21 @@ const userSchema = new Schema({
   image: {
     type: String,
     trim: true
+  },
+  profileImage: {
+    type: String,
+    trim: true
+  },
+  gocardless_customer_id: { type: String },
+  gocardless_mandate_id: { type: String },
+});
+
+// Virtual for image URL
+userSchema.virtual('imageUrl').get(function () {
+  if (this.image) {
+    return `${process.env.SERVER_URL}/uploads/${path.basename(this.image)}`;
   }
+  return null;
 });
 
 // Create a User model

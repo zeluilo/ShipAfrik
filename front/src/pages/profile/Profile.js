@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from "../../components/Context";
+import { ip } from "../constants";
 
 const Profile = () => {
     const { currentUser, login } = useAuth();
@@ -14,13 +15,15 @@ const Profile = () => {
         phoneNumber: '',
         address: '',
         userType: '',
-        id: '',
+        id: currentUser,
+        profileImage: null
     });
 
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
     const [showErrorAlert, setShowErrorAlert] = useState(false);
+    const [imagePreview, setImagePreview] = useState(null); // State for image preview
 
     // Fetch user data
     useEffect(() => {
@@ -29,6 +32,7 @@ const Profile = () => {
             try {
                 const response = await axios.get(`http://localhost:3001/shipafrik/user/${currentUser}`);
                 const userData = response.data;
+                console.log('123: ', userData)
                 setUser(userData);
                 setFormData({
                     firstName: userData.firstName || '',
@@ -39,6 +43,7 @@ const Profile = () => {
                     userType: userData.userType || '',
                     id: userData._id || '',
                 });
+                setImagePreview(userData.profileImage || null); // Set initial image preview
             } catch (error) {
                 console.error('Error fetching user:', error);
             } finally {
@@ -58,30 +63,68 @@ const Profile = () => {
         });
     };
 
-    // Handle profile update
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImagePreview(URL.createObjectURL(file)); // Preview the selected image
+            setFormData({ ...formData, profileImage: file }); // Store the file in formData
+        }
+
+        // Log the file details
+        if (file) {
+            console.log('Selected file:', file);
+            console.log('File name:', file.name);
+            console.log('File size:', file.size);
+            console.log('File type:', file.type);
+        }
+    };
+
+
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
+        const formDataToSend = new FormData();
+
+        // Append form data
+        for (const key in formData) {
+            formDataToSend.append(key, formData[key]);
+        }
+
+        console.log('Form Data ', formData.id)
+
         try {
-            const response = await axios.put(`http://localhost:3001/shipafrik/update-profile/${formData.id}`, formData);
+            const response = await axios.put(`http://localhost:3001/shipafrik/update-user/${formData.id}`, formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            // Check if there's a message indicating success or an error
             if (response.data.message) {
                 setErrorMessage(response.data.message);
                 setShowErrorAlert(true);
-            }
-            if (response.data.user) {
-                // Update current user context and local storage
-                if (typeof window !== 'undefined' && window.localStorage) {
-                    login({ ...currentUser, ...formData });
+
+                // Reload the page if the update is successful
+                if (response.status === 200) {
+                    const updatedUser = response.data.user;
+                    setUser(updatedUser);
+                    setImagePreview(updatedUser.imageUrl || null);                    
+                    window.location.reload();
+                    // navigate('/', { state: { successMessage: 'Profile updated successfully!' } });
                 }
-                setErrorMessage('Profile updated successfully!');
-                setShowErrorAlert(true);
-                navigate('/dashboard', { state: { successMessage: 'Profile updated successfully!' } });
             }
+
         } catch (error) {
-            console.error('Error updating profile:', error);
-            setErrorMessage('Error updating profile. Please try again.');
+            // Handle the error if the response status is 400
+            if (error.response && error.response.status === 400) {
+                setErrorMessage(error.response.data.message); // Display the message from the server
+            } else {
+                setErrorMessage('Error updating profile. Please try again.');
+            }
             setShowErrorAlert(true);
         }
     };
+
+
 
     return (
         <section className="profile section bg-dark min-vh-100 d-flex">
@@ -96,7 +139,12 @@ const Profile = () => {
                         <div className="col-xl-4">
                             <div className="card">
                                 <div className="card-body profile-card pt-4 d-flex flex-column align-items-center">
-                                    <img src={`${process.env.PUBLIC_URL}/img/profile.png`} alt="Profile" className="rounded-circle" />
+                                <img 
+                                        src={imagePreview || `${process.env.PUBLIC_URL}/profile.png`} 
+                                        alt="Profile" 
+                                        className="img-fluid rounded-circle mb-2" 
+                                        style={{ width: '150px', height: '150px', objectFit: 'cover' }}
+                                    />                                    
                                     <h2>{user?.firstName} {user?.lastName}</h2>
                                     <h3>{user?.userType}</h3>
                                 </div>
@@ -138,13 +186,30 @@ const Profile = () => {
                                             <form onSubmit={handleUpdateProfile}>
                                                 <h5 className="card-title">Edit Profile Information</h5>
 
-                                                <div class="row mb-3 text-start">
-                                                    <label for="profileImage" class="col-md-4 col-lg-3 col-form-label">Profile Image</label>
-                                                    <div class="col-md-8 col-lg-9">
-                                                        <img src="assets/img/profile-img.jpg" alt="Profile"/>
-                                                            <div class="pt-2">
-                                                                <a href="/" class="btn btn-primary btn-sm" title="Upload new profile image"><i class="bi bi-upload"></i></a>
-                                                            </div>
+                                                <div className="row mb-3 text-start">
+                                                    <label htmlFor="profileImage" className="col-md-4 col-lg-3 col-form-label">Profile Image</label>
+                                                    <div className="col-md-8 col-lg-9">
+                                                        <input
+                                                            type="file"
+                                                            name="profileImage" // This should match the field name in multer
+                                                            accept="image/*"
+                                                            onChange={handleImageChange}
+                                                            style={{ display: 'none' }}
+                                                            id="profileImageInput"
+                                                        />
+
+                                                        <img
+                                                            src={imagePreview || user?.profileImage || `${process.env.PUBLIC_URL}/profile.png`}
+                                                            alt="Profile"
+                                                            className="img-fluid rounded-circle mb-2"
+                                                            style={{ width: '150px', height: '150px', objectFit: 'cover', cursor: 'pointer' }}
+                                                            onClick={() => document.getElementById('profileImageInput').click()} // Trigger file input click
+                                                        />
+                                                        <div className="pt-2">
+                                                            <button type="button" className="btn btn-primary btn-sm" onClick={() => document.getElementById('profileImageInput').click()} title="Upload new profile image">
+                                                                <i className="bi bi-upload"></i> Upload
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -221,9 +286,12 @@ const Profile = () => {
 
                                             {/* Display error message */}
                                             {showErrorAlert && (
-                                                <div className={`form-control alert ${errorMessage.includes('successfully') ? 'alert-success' : 'alert-danger'}`} role="alert">
-                                                    {errorMessage}
+                                                <div className="d-flex justify-content-center">
+                                                    <div className={`form-control my-2 align-content-center w-50 alert ${errorMessage.includes('successfully') ? 'alert-success' : 'alert-danger'}`} role="alert">
+                                                        {errorMessage}
+                                                    </div>
                                                 </div>
+
                                             )}
                                         </div>
                                     </div>

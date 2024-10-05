@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Dashboard.css';
+import { ip } from "../../../constants";
 
 const ServiceType = () => {
   const [serviceTypes, setServiceTypes] = useState([]);
@@ -13,7 +14,7 @@ const ServiceType = () => {
   // Fetch service types from server
   const fetchServiceTypes = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/shipafrik/get-service-types');
+      const response = await axios.get(`${ip}/shipafrik/get-service-types`);
       setServiceTypes(response.data);
       console.log('Service types fetched successfully:', response.data);
     } catch (error) {
@@ -37,14 +38,14 @@ const ServiceType = () => {
     try {
       if (editServiceType) {
         // Update existing service type
-        const response = await axios.put(`http://localhost:3001/shipafrik/update-service-type/${editServiceType._id}`, {
+        const response = await axios.put(`${ip}/shipafrik/update-service-type/${editServiceType._id}`, {
           name: newServiceTypeName,
         });
         console.log('Service type updated:', response.data);
         setSuccessMessage('Service type updated successfully.');
       } else {
         // Create new service type
-        const response = await axios.post('http://localhost:3001/shipafrik/add-service-type', {
+        const response = await axios.post(`${ip}/shipafrik/add-service-type`, {
           name: newServiceTypeName,
         });
         console.log('New service type created:', response.data);
@@ -69,7 +70,7 @@ const ServiceType = () => {
   // Handle deleting a service type
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:3001/shipafrik/delete-service-type/${id}`);
+      await axios.delete(`${ip}/shipafrik/delete-service-type/${id}`);
       console.log('Service type deleted:', id);
       fetchServiceTypes();
     } catch (error) {

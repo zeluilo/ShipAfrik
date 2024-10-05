@@ -8,10 +8,7 @@ dotenv.config();
 const mongoURI = process.env.DATABASE_URL || 'mongodb+srv://zeluilo:zeluilo104@shipafrik.kbsdn.mongodb.net/shipafrik';
 
 // Connect to MongoDB using Mongoose
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(mongoURI)
   .then(() => {
     console.log('Connected to MongoDB successfully');
     console.log(`Connected to database: ${mongoose.connection.db.databaseName}`);

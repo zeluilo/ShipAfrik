@@ -15,7 +15,7 @@ const app = express();
 app.use(cors({
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000', // Replace with your frontend URL
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type']
+    allowedHeaders: ['Content-Type', 'Authorization', 'gocardless-version'], // include custom headers
   }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));

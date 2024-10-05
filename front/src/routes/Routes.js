@@ -9,6 +9,8 @@ import CompareQuotes from "../pages/website/pages/Customer/CompareQuotes";
 import Country from "../pages/website/pages/Admin/Country";
 import Profile from "../pages/profile/Profile";
 import TrackOrders from "../pages/website/pages/Customer/TrackOrders";
+import PaymentCallback from "../pages/website/pages/Customer/PaymentCallback";
+import OrderConfirmation from "../pages/website/pages/Customer/OrderConfirmation";
 
 const AppRoutes = () => {
   const { isLoggedIn, currentUser } = useAuth();
@@ -62,6 +64,9 @@ const AppRoutes = () => {
         <Route path="/countries-cities" element={<Country />}/>
         <Route path="/profile" element={<Profile />} />
         <Route path="/track-orders" element={<TrackOrders />} />
+        <Route path="/payment-callback" element={<PaymentCallback />} />
+        <Route path="/order-confirmation" element={<OrderConfirmation />} />
+
         </Routes>
     </>
   );

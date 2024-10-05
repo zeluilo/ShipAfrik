@@ -12,6 +12,11 @@ import Sidebar from '../pages/website/pages/Admin/Sidebar'; // Import the Sideba
 import RouteSwitch from '../routes/RouteSwitch';
 import AppRoutes from '../routes/Routes';
 
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+
 // Create a Layout component to manage header and sidebar visibility
 const Layout = () => {
   const location = useLocation();
@@ -38,6 +43,7 @@ const Layout = () => {
 
 function App() {
   return (
+    <Elements stripe={stripePromise}>
     <Router>
       <AuthProvider>
       {/* <Header /> */}
@@ -58,6 +64,7 @@ function App() {
         <Footer />
       </AuthProvider>
     </Router>
+    </Elements>
   );
 }
 

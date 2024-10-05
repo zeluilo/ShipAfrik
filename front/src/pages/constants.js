@@ -1,0 +1,1 @@
+export const ip = "https://sayituniverse-591e2b0b306b.herokuapp.com";

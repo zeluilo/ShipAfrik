@@ -6,7 +6,7 @@ const OrderSchema = new mongoose.Schema({
     contactPhone: { type: String, required: true },
     contactEmail: { type: String, required: true },
     dropoffAddress: { type: String, required: true },
-    quotes: { type: Array, default: [] },
+    quote: { type: Array, default: [] },
     shipmentId: { type: String, required: true },
     preferredCollectionDate: { type: Date, required: true },
     grandTotal: { type: Number, required: true },
@@ -23,11 +23,8 @@ const OrderSchema = new mongoose.Schema({
         ],
         default: 'In Progress'
     },
-    trackingHistory: [
-        {
-            status: String,
-            date: { type: Date, default: Date.now }
-        }
-    ]}, { timestamps: true });
+    gocardless_payment_id: { type: String },
+    createdAt: { type: Date, default: Date.now },
+});
 
 module.exports = mongoose.model('Order', OrderSchema);

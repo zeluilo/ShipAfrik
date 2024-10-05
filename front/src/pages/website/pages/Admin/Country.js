@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Dashboard.css';
+import { ip } from "../../../constants";
 
 const Country = () => {
   const [countries, setCountries] = useState([]);
@@ -17,7 +18,7 @@ const Country = () => {
   // Fetch countries from server
   const fetchCountries = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/shipafrik/get-countries');
+      const response = await axios.get(`${ip}/shipafrik/get-countries`);
       setCountries(response.data);
       setFilteredCountries(response.data);
       console.log('Countries fetched successfully:', response.data);
@@ -72,7 +73,7 @@ const Country = () => {
         console.log('Submitting new country:', newCountryName);
         console.log('Submitting cities:', filteredCities);
 
-        const response = await axios.post('http://localhost:3001/shipafrik/add-country', {
+        const response = await axios.post(`${ip}/shipafrik/add-country`, {
           name: newCountryName,
           cities: filteredCities
         });
@@ -95,7 +96,7 @@ const Country = () => {
         console.log('Submitting cities:', filteredCities);
 
         try {
-          const response = await axios.put(`http://localhost:3001/shipafrik/add-city/${selectedCountry}`, {
+          const response = await axios.put(`${ip}/shipafrik/add-city/${selectedCountry}`, {
             cities: filteredCities
           });
 
@@ -150,7 +151,7 @@ const Country = () => {
   // Handle delete country
   const handleDeleteCountry = async (id) => {
     try {
-      await axios.delete(`http://localhost:3001/shipafrik/delete-country/${id}`);
+      await axios.delete(`${ip}/shipafrik/delete-country/${id}`);
       console.log('Country deleted:', id);
       fetchCountries();
     } catch (error) {
@@ -162,7 +163,7 @@ const Country = () => {
   // Handle delete city
   const handleDeleteCity = async (countryId, cityId) => {
     try {
-      await axios.delete(`http://localhost:3001/shipafrik/delete-city/${countryId}/city/${cityId}`);
+      await axios.delete(`${ip}/shipafrik/delete-city/${countryId}/city/${cityId}`);
       console.log('City deleted:', cityId);
       fetchCountries();
     } catch (error) {

@@ -17,6 +17,7 @@ router.post('/create-shipment', async (req, res) => {
             boxSizes,
             userId,
             availableCollectionDays,
+            latestDropOffDate,
             withdraw
         } = req.body;
 
@@ -34,6 +35,7 @@ router.post('/create-shipment', async (req, res) => {
             boxSizes,
             userId,
             availableCollectionDays,
+            latestDropOffDate,
             withdraw
         });
 
@@ -68,6 +70,7 @@ router.put('/update-shipment/:id', async (req, res) => {
             boxSizes,
             datePosted,
             availableCollectionDays,
+            latestDropOffDate,
         } = req.body;
 
         // Log the incoming request
@@ -86,6 +89,7 @@ router.put('/update-shipment/:id', async (req, res) => {
                 boxSizes,
                 datePosted,
                 availableCollectionDays,
+                latestDropOffDate
             },
             { new: true } // Return the updated document
         );
@@ -242,7 +246,6 @@ router.post('/create-quote', async (req, res) => {
             arriveBy,
             boxSizes,
             userId,
-
         } = req.body;
 
         // Log the incoming request
@@ -324,5 +327,30 @@ router.put('/update-shipment-withdraw/:id', async (req, res) => {
     }
 });
 
+// Route to delete a quote
+router.delete('/delete-quote/:id', async (req, res) => {
+    console.log('Received request to delete a quote');
+    try {
+        const quoteId = req.params.id;
+
+        // Find and delete the quote by ID
+        const deletedQuote = await Quote.findByIdAndDelete(quoteId);
+
+        if (!deletedQuote) {
+            return res.status(404).json({ message: 'Quote not found' });
+        }
+
+        // Log successful deletion
+        console.log('Quote deleted successfully:', quoteId);
+
+        res.status(200).json({
+            message: 'Quote deleted successfully',
+            deletedQuote
+        });
+    } catch (error) {
+        console.error('Error deleting quote:', error.message);
+        res.status(400).json({ message: 'Error deleting quote', error: error.message });
+    }
+});
 
 module.exports = router;

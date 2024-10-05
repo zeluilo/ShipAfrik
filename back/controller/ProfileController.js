@@ -29,7 +29,9 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage })
+
+router.use('/uploads', express.static(uploadsDir));
 
 // Load environment variables from .env file
 const dotenv = require('dotenv');
@@ -87,7 +89,7 @@ router.post('/register', upload.single('image'), async (req, res) => {
       password: hashedPassword, // Save the hashed password
       userType,
       dateCreated: new Date(),
-      image: req.file ? req.file.path : undefined, // Save the file path if available
+      image: req.file ? req.file.path : undefined
     });
 
     // Save the user to the database
@@ -116,7 +118,7 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       console.log('User not found:', email);
-      return res.statufs(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     // Compare the provided password with the hashed password
@@ -205,7 +207,7 @@ router.get('/user/:id', async (req, res) => {
 });
 
 // Route to update user details
-router.put('/update-user/:id', upload.single('image'), async (req, res) => {
+router.put('/update-user/:id', upload.single('profileImage'), async (req, res) => {
   const userId = req.params.id;
   console.log('Received PUT request to update user with ID:', userId);
   const updateData = req.body;
@@ -217,13 +219,20 @@ router.put('/update-user/:id', upload.single('image'), async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+        // Check if the new email already exists
+        if (updateData.email) {
+          const existingUser = await User.findOne({ email: updateData.email, _id: { $ne: userId } });
+          if (existingUser) {
+            return res.status(400).json({ message: 'Email already in use' });
+          }
+        }
+
     // Update user fields with provided data
-    const { firstName, lastName, email, phoneNumber, userType } = updateData;
+    const { firstName, lastName, email, phoneNumber } = updateData;
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
     if (email) user.email = email;
     if (phoneNumber) user.phoneNumber = phoneNumber;
-    if (userType) user.userType = userType;
 
     // Handle password update if provided
     if (updateData.password) {
@@ -237,19 +246,29 @@ router.put('/update-user/:id', upload.single('image'), async (req, res) => {
     }
 
     // Handle profile image update if provided
-      user.image = req.file.path;
+    if (req.file) {
+      // Optionally, delete the old image if it exists
+      if (user.image && fs.existsSync(user.image)) {
+        fs.unlinkSync(user.image);
+      }
+
+      user.image = req.file.path; // Store the absolute path in the database
       console.log('Updating profile image with data:', req.file);
+    }
 
     // Save the updated user data
     await user.save();
     console.log('User updated successfully:', user);
 
-    res.status(200).json({ message: 'User updated successfully', user });
+    const imageUrl = user.image ? `${req.protocol}://${req.get('host')}/uploads/${path.basename(user.image)}` : null;
+    console.log('Image: ', imageUrl)
+    res.status(200).json({ message: 'User updated successfully', user: { ...user._doc, imageUrl } });
   } catch (error) {
     console.error('Error updating user:', error);
     res.status(500).json({ message: 'Error updating user', error: error.message });
   }
 });
+
 
 
 module.exports = router;

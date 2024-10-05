@@ -6,15 +6,25 @@ import axios from 'axios';
 import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { ip } from "../../../constants";
+
+import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+
+// Test Cards
+// 4000058260000005
+// 5555558265554449
+// 4000008260000000
 
 const OrderSummary = () => {
     const { currentUser } = useAuth();
-    
+
     const location = useLocation();
     const navigate = useNavigate();
-    const { selectedShipment, quotes } = location.state || {};
+    const { selectedShipment, quote } = location.state || {};
     console.log('Selected Shipment:', selectedShipment);
-    console.log('Quotes:', quotes);
+    console.log('Quotes:', quote);
     const [loading, setLoading] = useState(true);
     const [shipmentDetails, setShipmentDetails] = useState(null);
     const [preferredDate, setPreferredDate] = useState(null);
@@ -31,12 +41,16 @@ const OrderSummary = () => {
     const [destinationContactPhone, setDestinationContactPhone] = useState('');
     const [destinationContactEmail, setDestinationContactEmail] = useState('');
 
+    // Stripe hooks
+    const stripe = useStripe();
+    const elements = useElements();
+
     useEffect(() => {
         const fetchShipment = async () => {
             try {
                 setLoading(true);
                 if (selectedShipment) {
-                    const response = await axios.get(`http://localhost:3001/shipafrik/get-shipment/${selectedShipment}`);
+                    const response = await axios.get(`${ip}/shipafrik/get-shipment/${selectedShipment}`);
                     const shipmentDetails = response.data;
                     setShipmentDetails(shipmentDetails);
                 }
@@ -51,10 +65,10 @@ const OrderSummary = () => {
     }, [selectedShipment]);
 
     useEffect(() => {
-        if (shipmentDetails && quotes) {
-            const quoteSizes = Array.isArray(quotes)
-                ? quotes.map(q => q.boxSizes).flat()
-                : quotes.boxSizes || [];
+        if (shipmentDetails && quote) {
+            const quoteSizes = Array.isArray(quote)
+                ? quote.map(q => q.boxSizes).flat()
+                : quote.boxSizes || [];
 
             const total = shipmentDetails.boxSizes.reduce((total, box) => {
                 return total + (box.price * (quoteSizes.find(q => q.size === box.size)?.quantity || 0));
@@ -62,46 +76,61 @@ const OrderSummary = () => {
 
             setGrandTotal(total);
         }
-    }, [shipmentDetails, quotes]); // Calculate grand total whenever shipmentDetails or quotes change
+    }, [shipmentDetails, quote]); // Calculate grand total whenever shipmentDetails or quotes change
 
     const handlePaymentOrder = async () => {
-                    // Validate required fields
-    if (!customerName) {
-        toast.error("Customer name is required");
-        return;
-    }
-    if (!pickupAddress) {
-        toast.error("Pickup address is required");
-        return;
-    }
-    if (!contactPhone) {
-        toast.error("Contact phone is required");
-        return;
-    }
-    if (!contactEmail) {
-        toast.error("Contact email is required");
-        return;
-    }
-    if (!dropoffAddress) {
-        toast.error("Dropoff address is required");
-        return;
-    }
-    if (!preferredDate) {
-        toast.error("Preferred collection date is required");
-        return;
-    }
-    if (grandTotal === 0 || isNaN(grandTotal)) {
-        toast.error("Grand total is missing or invalid");
-        return;
-    }
+        if (!stripe || !elements) {
+            toast.error('Stripe is not ready');
+            console.warn('Stripe not ready: stripe or elements is undefined');
+            return;
+        }
+
+        // Validate required fields
+        if (!customerName) {
+            toast.error("Customer name is required");
+            console.warn("Customer name validation failed");
+            return;
+        }
+        if (!pickupAddress) {
+            toast.error("Pickup address is required");
+            console.warn("Pickup address validation failed");
+            return;
+        }
+        if (!contactPhone) {
+            toast.error("Contact phone is required");
+            console.warn("Contact phone validation failed");
+            return;
+        }
+        if (!contactEmail) {
+            toast.error("Contact email is required");
+            console.warn("Contact email validation failed");
+            return;
+        }
+        if (!dropoffAddress) {
+            toast.error("Dropoff address is required");
+            console.warn("Dropoff address validation failed");
+            return;
+        }
+        if (!preferredDate) {
+            toast.error("Preferred collection date is required");
+            console.warn("Preferred collection date validation failed");
+            return;
+        }
+        if (grandTotal === 0 || isNaN(grandTotal)) {
+            toast.error("Grand total is missing or invalid");
+            console.warn("Grand total validation failed: ", grandTotal);
+            return;
+        }
+
         try {
+            // Prepare order data
             const orderData = {
                 customerName,
                 pickupAddress,
                 contactPhone,
                 contactEmail,
                 dropoffAddress,
-                quotes,
+                quote,
                 shipmentId: shipmentDetails._id,
                 preferredDate,
                 grandTotal,
@@ -109,22 +138,51 @@ const OrderSummary = () => {
             };
             console.log('Order Data:', orderData);
 
-            const response = await axios.post('http://localhost:3001/shipafrik/payment-orders', orderData);
-            console.log('Order placed successfully:', response.data);
-            if (response.status === 201) {
-                toast.success('Order placed successfully!');
-                // navigate('/customer-hub');
+            // Send order data to server to create order and Payment Intent
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/payment-orders`, orderData);
+            const { clientSecret, paymentIntent, order } = response.data;
+
+            console.log('Payment Response: ', response.data);
+
+            if (clientSecret) {
+                console.log('Client Secret:', clientSecret);
+
+                const cardElement = elements.getElement(CardElement);
+
+                // Confirm the payment using the client_secret from the server
+                const { error, paymentIntent: confirmedPaymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                        billing_details: {
+                            name: customerName,
+                            email: contactEmail,
+                        },
+                    },
+                });
+
+                console.log('Confirmed Payment Intent: ', confirmedPaymentIntent);
+
+                if (error) {
+                    console.error('Payment confirmation error:', error);
+                    toast.error('Payment failed: ' + error.message);
+                    return;
+                }
+
+                if (confirmedPaymentIntent.status === 'succeeded') {
+                    console.log('Payment succeeded:', confirmedPaymentIntent);
+                    console.log('Order placed successfully:', order);
+                    toast.success('Payment successful and order placed!');
+                    navigate('/order-confirmation', { state: { order } });
+                }
             } else {
-                toast.error('Failed to place order');
+                toast.error('Failed to create payment intent');
+                console.error('Client secret not received from server');
             }
         } catch (error) {
             console.error('Error placing order:', error);
-            toast.error('Failed to place order');
+            toast.error('Failed to place order: ' + (error.response?.data?.message || error.message));
         }
     };
-
-
-        
 
     return (
         <section id="constructions" className="constructions section bg-dark min-vh-100 d-flex" style={{ textAlign: 'center' }}>
@@ -151,12 +209,12 @@ const OrderSummary = () => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {shipmentDetails && shipmentDetails.boxSizes && quotes ? (
+                                                {shipmentDetails && shipmentDetails.boxSizes && quote ? (
                                                     <>
                                                         {shipmentDetails.boxSizes.map((box, index) => {
-                                                            const quoteSizes = Array.isArray(quotes)
-                                                                ? quotes.map(q => q.boxSizes).flat()
-                                                                : quotes.boxSizes || [];
+                                                            const quoteSizes = Array.isArray(quote)
+                                                                ? quote.map(q => q.boxSizes).flat()
+                                                                : quote.boxSizes || [];
 
                                                             const boxInQuote = quoteSizes.find(b => b.size === box.size);
                                                             const requestedQuantity = boxInQuote ? boxInQuote.quantity : 0;
@@ -310,10 +368,10 @@ const OrderSummary = () => {
                                                 </tbody>
                                             </table>
                                         </div>
-                                        <p className="mt-2 text-muted" style={{ fontSize: '13px' }}>
+                                        {/* <p className="mt-2 text-muted" style={{ fontSize: '13px' }}>
                                             <strong>Drop-Off Address (only if the customer chooses a drop-off to shipper warehouse) </strong><br /><br />
                                             The Shipper will get in touch with you directly to let you know where to drop off your shipment.
-                                        </p>
+                                        </p> */}
                                     </div>
                                 </div>
                                 <div className="row mt-4 p-4">
@@ -333,101 +391,73 @@ const OrderSummary = () => {
                 </div>
             </div>
 
-<div className="modal fade" id="buy" tabIndex="-1">
-    <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content">
-            <div className="modal-header">
-                <h4 className="modal-title">Confirm Your Shipment</h4>
-                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div className="modal-body">
-                <p className="text-muted pb-3">
-                    Please review the shipment details and make the payment to proceed.
-                </p>
+            <div className="modal fade" id="buy" tabIndex="-1">
+                <div className="modal-dialog modal-dialog-centered">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h4 className="modal-title">Confirm Your Shipment</h4>
+                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div className="modal-body">
+                            <p className="text-muted pb-3">
+                                Please review the shipment details and make the payment to proceed.
+                            </p>
 
-                <div className="shipment-details px-3 py-4 border border-primary rounded mb-3">
-                    <h5 className="mb-3">Shipment Details</h5>
-                    <div className="mb-2">
-                        <strong>Customer Name:</strong>
-                        <span className="ms-2">{customerName}</span>
-                    </div>
-                    <div className="mb-2">
-                        <strong>Pickup Address:</strong>
-                        <span className="ms-2">{pickupAddress}</span>
-                    </div>
-                    <div className="mb-2">
-                        <strong>Contact Phone:</strong>
-                        <span className="ms-2">{contactPhone}</span>
-                    </div>
-                    <div className="mb-2">
-                        <strong>Contact Email:</strong>
-                        <span className="ms-2">{contactEmail}</span>
-                    </div>
-                    <div className="mb-2">
-                        <strong>Dropoff Address:</strong>
-                        <span className="ms-2">{dropoffAddress}</span>
-                    </div>
-                    <div className="mb-2">
-                        <strong>Preferred Collection Date:</strong>
-                        <span className="ms-2">{preferredDate ? preferredDate.toLocaleDateString() : 'Not specified'}</span>
-                    </div>
-                </div>
+                            <div className="shipment-details px-3 py-4 border border-primary rounded mb-3">
+                                <h5 className="mb-3">Shipment Details</h5>
+                                <div className="mb-2">
+                                    <strong>Customer Name:</strong>
+                                    <span className="ms-2">{customerName}</span>
+                                </div>
+                                <div className="mb-2">
+                                    <strong>Pickup Address:</strong>
+                                    <span className="ms-2">{pickupAddress}</span>
+                                </div>
+                                <div className="mb-2">
+                                    <strong>Contact Phone:</strong>
+                                    <span className="ms-2">{contactPhone}</span>
+                                </div>
+                                <div className="mb-2">
+                                    <strong>Contact Email:</strong>
+                                    <span className="ms-2">{contactEmail}</span>
+                                </div>
+                                <div className="mb-2">
+                                    <strong>Dropoff Address:</strong>
+                                    <span className="ms-2">{dropoffAddress}</span>
+                                </div>
+                                <div className="mb-2">
+                                    <strong>Preferred Collection Date:</strong>
+                                    <span className="ms-2">{preferredDate ? preferredDate.toLocaleDateString() : 'Not specified'}</span>
+                                </div>
+                            </div>
 
-                <h4 className="mt-3">Payment Details</h4>
-                <form>
-                    <div className="form-group mb-3">
-                        <label htmlFor="cardOwner" className="form-label">
-                            <h6>Card Owner Name</h6>
-                        </label>
-                        <input
-                            type="text"
-                            name="cardOwner"
-                            className="form-control"
-                            required
-                            // value={cardDetails.cardOwner}
-                            // onChange={handleInputChange}
-                        />
-                    </div>
-                    <div className="form-group mb-3">
-                        <label className="form-label">
-                            <h6>Card Details</h6>
-                        </label>
-                        {/* <CardElement className="form-control" options={cardElementOptions} /> */}
-                    </div>
-                    <div className="form-group mb-3">
-                        <label htmlFor="userEmail" className="form-label">
-                            <h6>Email Address</h6>
-                        </label>
-                        <input
-                            type="email"
-                            name="userEmail"
-                            className="form-control"
-                            required
-                            // value={cardDetails.userEmail}
-                            // onChange={handleInputChange}
-                        />
-                    </div>
-                </form>
+                            <h4 className="mt-3">Payment Details</h4>
+                                <div className="form-group mb-3">
+                                    <label className="form-label">
+                                        <h6>Card Details</h6>
+                                    </label>
+                                    <CardElement className="form-control" />
+                                </div>
 
-                <div className="d-flex justify-content-between mt-3">
-                    <span><strong>Grand Total:</strong></span>
-                    <span className="h5">£{grandTotal.toFixed(2)}</span>
-                </div>
+                            <div className="d-flex justify-content-between mt-3">
+                                <span><strong>Grand Total:</strong></span>
+                                <span className="h5">£{grandTotal.toFixed(2)}</span>
+                            </div>
 
-                <div className="mt-4">
-                    <button
-                        onClick={handlePaymentOrder}
-                        data-bs-dismiss="modal"
-                        className="btn btn-primary btn-block"
-                        style={{ width: '100%' }}
-                    >
-                        Proceed to Payment <i className="fas fas-long-arrow-alt-right"></i>
-                    </button>
+                            <div className="mt-4">
+                                <button
+                                    onClick={handlePaymentOrder}
+                                    data-bs-dismiss="modal"
+                                    className="btn btn-primary btn-block"
+                                    style={{ width: '100%' }}
+                                >
+                                    Proceed to Payment <i className="fas fas-long-arrow-alt-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 
         </section>
     );

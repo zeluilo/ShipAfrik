@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from "../../../../components/Context";
 import { toast } from 'react-toastify';
+import { ip } from "../../../constants";
 
 const Orders = () => {
     const { currentUser } = useAuth();
@@ -38,12 +39,12 @@ const Orders = () => {
 
     const fetchOrders = async () => {
         try {
-            const response = await axios.get(`http://localhost:3001/shipafrik/orders/${currentUser}`);
+            const response = await axios.get(`${ip}/shipafrik/orders/${currentUser}`);
             console.log('Fetched Orders:', response.data.orders);
 
             const ordersWithShipments = await Promise.all(
                 response.data.orders.map(async (order) => {
-                    const shipmentResponse = await axios.get(`http://localhost:3001/shipafrik/get-shipment/${order.shipmentId}`);
+                    const shipmentResponse = await axios.get(`${ip}/shipafrik/get-shipment/${order.shipmentId}`);
                     return {
                         ...order,
                         shipment: shipmentResponse.data, // Assuming the shipment details are returned as an array
@@ -69,7 +70,7 @@ const Orders = () => {
 
     const handleUpdateStatus = async (orderId) => {
         try {
-            await axios.put(`http://localhost:3001/shipafrik/orders/${orderId}/status`, { status: newStatus });
+            await axios.put(`${ip}/shipafrik/orders/${orderId}/status`, { status: newStatus });
             toast.success('Order status updated successfully!');
             setShowStatusModal(false);
             fetchOrders();
@@ -108,7 +109,7 @@ const Orders = () => {
             case 'orderRefDesc':
                 return sortedOrders.sort((a, b) => b.orderReference.localeCompare(a.orderReference));
             case 'serviceType':
-                return sortedOrders.sort((a, b) => a.quotes[0].serviceType.localeCompare(b.quotes[0].serviceType));
+                return sortedOrders.sort((a, b) => a.quote[0].serviceType.localeCompare(b.quote[0].serviceType));
             case 'plannedDateAsc':
                 return sortedOrders.sort((a, b) => new Date(a.preferredCollectionDate) - new Date(b.preferredCollectionDate));
             case 'plannedDateDesc':
@@ -285,27 +286,40 @@ const Orders = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {currentInProgressOrders.map((order) => (
-                                            <tr key={order._id}>
-                                                <td>{order.orderReference}</td>
-                                                <td>{order.customerName}</td>
-                                                <td>{order.quotes[0].serviceType}</td>
-                                                <td>{formatDate(order.preferredCollectionDate)}</td>
-                                                <td>{order.pickupAddress}</td>
-                                                <td>£{order.grandTotal}</td>
-                                                <td>
-                                                    <i
-                                                        type="button"
-                                                        className='bi bi-eye-fill'
-                                                        style={{ color: 'blue' }}
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#viewOrders"
-                                                        onClick={() => handleViewOrders(order)}
-                                                    ></i>
-                                                </td>
+                                        {currentInProgressOrders.length > 0 ? (
+                                            currentInProgressOrders.map((order) => (
+                                                <tr key={order._id}>
+                                                    <td>{order.orderReference}</td>
+                                                    <td>{order.customerName}</td>
+                                                    <td>
+                                                        <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
+                                                            {order.quote[0].serviceType.map((serviceType, index) => (
+                                                                <li key={index}>{serviceType}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </td>
+                                                    <td>{formatDate(order.preferredCollectionDate)}</td>
+                                                    <td>{order.pickupAddress}</td>
+                                                    <td>£{order.grandTotal}</td>
+                                                    <td>
+                                                        <i
+                                                            type="button"
+                                                            className="bi bi-eye-fill"
+                                                            style={{ color: 'blue' }}
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#viewOrders"
+                                                            onClick={() => handleViewOrders(order)}
+                                                        ></i>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="7" style={{ textAlign: 'center' }}>No InProgress orders found</td>
                                             </tr>
-                                        ))}
+                                        )}
                                     </tbody>
+
                                 </table>
 
                                 {/* Pagination Controls for In Progress Orders */}
@@ -375,7 +389,7 @@ const Orders = () => {
                                                     <td>1111</td>
                                                     <td>{formatDate(order.shipment.estimatedVesselDepartureDate)}</td>
                                                     <td>{formatDate(order.shipment.estimatedArrivalDate)}</td>
-                                                    <td>{formatDate(order.quotes[0].arriveBy)}</td>
+                                                    <td>{formatDate(order.quote[0].arriveBy)}</td>
 
                                                     <td>£{order.grandTotal}</td>
 

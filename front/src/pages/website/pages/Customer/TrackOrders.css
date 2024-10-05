@@ -1,0 +1,37 @@
+.section {
+    padding: 60px 0;
+}
+
+.card {
+    border-radius: 10px;
+}
+
+.status-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    font-size: 18px;
+}
+
+.status-point {
+    margin-right: 10px;
+    font-size: 20px;
+}
+
+.completed {
+    color: green;
+}
+
+.order-details {
+    text-align: left; /* Align text to the left for better readability */
+    color: rgb(0, 0, 0); /* Ensure text is visible on the dark background */
+}
+
+.order-details p {
+    margin: 5px 0; /* Space out order detail items */
+}

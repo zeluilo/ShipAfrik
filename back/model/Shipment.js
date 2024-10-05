@@ -18,13 +18,13 @@ const shipmentSchema = new mongoose.Schema({
     ref: 'User'
   },
   availableCollectionDays: [String],
+  latestdropoffDays: [String],
   boxSizes: [boxSizeSchema],
   datePosted: {
     type: Date,
   },
-  dateCreated: {
+  latestDropOffDate: {
     type: Date,
-    default: Date.now
   },
   doorToChecked: {
     type: Boolean,
