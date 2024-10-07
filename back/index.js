@@ -13,7 +13,8 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000' || 'https://shipafrik.netlify.app/', // Replace with your frontend URL
+    // origin: process.env.CORS_ORIGIN || 'http://localhost:3000' || 'https://shipafrik.netlify.app/',
+    origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'gocardless-version'], // include custom headers
   }));
