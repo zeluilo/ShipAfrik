@@ -33,35 +33,35 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     // Validate password and passwordConfirmation match
     if (form.password !== form.passwordConfirmation) {
       toast.error('Passwords do not match');
       return;
     }
-  
+
     // Validate password criteria
     if (!validatePassword(form.password)) {
       toast.error('Password must be more than 8 characters and include at least one number');
       return;
     }
-  
+
     try {
       const payload = {
         ...form,
         userType: 'SHIPPER', // Include userType if required by your server
       };
-  
-      console.log('Submitting registration form with data:', payload); // Log the form data
-  
-      const response = await axios.post(`http://localhost:3001/shipafrik/register`, payload, {
+
+      // console.log('Submitting registration form with data:', payload); // Log the form data
+
+      const response = await axios.post(`${ip}/shipafrik/register`, payload, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
-  
-      console.log('Response from server:', response.data); // Log server response
-  
+
+      // console.log('Response from server:', response.data); // Log server response
+
       // Handle response based on status code
       if (response.status === 201) { // Created
         toast.success(response.data.message || 'Registration successful!');
@@ -80,8 +80,8 @@ const RegisterPage = () => {
         toast.error('An unexpected error occurred. Please try again.');
       }
     } catch (error) {
-      console.error('Error registering Customer:', error);
-  
+      // console.error('Error registering Customer:', error);
+
       // Handle different types of errors
       if (error.response) {
         toast.error(error.response.data.message || 'Error registering Customer. Please try again.');
@@ -92,7 +92,7 @@ const RegisterPage = () => {
       }
     }
   };
-  
+
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);

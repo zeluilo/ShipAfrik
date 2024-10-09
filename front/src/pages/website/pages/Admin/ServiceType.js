@@ -16,9 +16,9 @@ const ServiceType = () => {
     try {
       const response = await axios.get(`${ip}/shipafrik/get-service-types`);
       setServiceTypes(response.data);
-      console.log('Service types fetched successfully:', response.data);
+      // console.log('Service types fetched successfully:', response.data);
     } catch (error) {
-      console.error('Error fetching service types:', error);
+      // console.error('Error fetching service types:', error);
       setError('Failed to fetch service types.');
     }
   };
@@ -41,14 +41,14 @@ const ServiceType = () => {
         const response = await axios.put(`${ip}/shipafrik/update-service-type/${editServiceType._id}`, {
           name: newServiceTypeName,
         });
-        console.log('Service type updated:', response.data);
+        // console.log('Service type updated:', response.data);
         setSuccessMessage('Service type updated successfully.');
       } else {
         // Create new service type
         const response = await axios.post(`${ip}/shipafrik/add-service-type`, {
           name: newServiceTypeName,
         });
-        console.log('New service type created:', response.data);
+        // console.log('New service type created:', response.data);
         setSuccessMessage('Service type created successfully.');
       }
       fetchServiceTypes();
@@ -56,7 +56,7 @@ const ServiceType = () => {
       setEditServiceType(null);
       setError('');
     } catch (error) {
-      console.error('Error submitting form:', error);
+      // console.error('Error submitting form:', error);
       setError('Failed to submit form.');
     }
   };
@@ -71,10 +71,10 @@ const ServiceType = () => {
   const handleDelete = async (id) => {
     try {
       await axios.delete(`${ip}/shipafrik/delete-service-type/${id}`);
-      console.log('Service type deleted:', id);
+      // console.log('Service type deleted:', id);
       fetchServiceTypes();
     } catch (error) {
-      console.error('Error deleting service type:', error);
+      // console.error('Error deleting service type:', error);
       setError('Failed to delete service type.');
     }
   };

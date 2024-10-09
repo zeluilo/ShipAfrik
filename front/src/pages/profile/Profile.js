@@ -30,9 +30,9 @@ const Profile = () => {
         const fetchUserData = async () => {
             setLoading(true);
             try {
-                const response = await axios.get(`http://localhost:3001/shipafrik/user/${currentUser}`);
+                const response = await axios.get(`${ip}/shipafrik/user/${currentUser}`);
                 const userData = response.data;
-                console.log('123: ', userData)
+                // console.log('123: ', userData)
                 setUser(userData);
                 setFormData({
                     firstName: userData.firstName || '',
@@ -45,7 +45,7 @@ const Profile = () => {
                 });
                 setImagePreview(userData.profileImage || null); // Set initial image preview
             } catch (error) {
-                console.error('Error fetching user:', error);
+                // console.error('Error fetching user:', error);
             } finally {
                 setLoading(false);
             }
@@ -72,10 +72,10 @@ const Profile = () => {
 
         // Log the file details
         if (file) {
-            console.log('Selected file:', file);
-            console.log('File name:', file.name);
-            console.log('File size:', file.size);
-            console.log('File type:', file.type);
+            // console.log('Selected file:', file);
+            // console.log('File name:', file.name);
+            // console.log('File size:', file.size);
+            // console.log('File type:', file.type);
         }
     };
 
@@ -89,10 +89,10 @@ const Profile = () => {
             formDataToSend.append(key, formData[key]);
         }
 
-        console.log('Form Data ', formData.id)
+        // console.log('Form Data ', formData.id)
 
         try {
-            const response = await axios.put(`http://localhost:3001/shipafrik/update-user/${formData.id}`, formDataToSend, {
+            const response = await axios.put(`${ip}/shipafrik/update-user/${formData.id}`, formDataToSend, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

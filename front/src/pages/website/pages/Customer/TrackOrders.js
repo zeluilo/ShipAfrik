@@ -30,7 +30,7 @@ const TrackOrders = () => {
             const lowercaseOrderReference = orderReference.toUpperCase();
 
             const response = await axios.get(`${ip}/shipafrik/orders?orderReference=${lowercaseOrderReference}&email=${email}`); // Fetch order
-            console.log('Response Data: ', response.data)
+            // console.log('Response Data: ', response.data)
 
             // Check if order is found
             if (response.status === 200 && response.data) {
@@ -40,7 +40,7 @@ const TrackOrders = () => {
                 toast.error("Order not found. Please check the order reference and email.");
             }
         } catch (error) {
-            console.error("Error fetching order", error);
+            // console.error("Error fetching order", error);
 
             // Check if the error response is 404 (Order not found)
             if (error.response && error.response.status === 404) {

@@ -42,16 +42,37 @@ const JWT_SECRET = process.env.JWT_SECRET || 'princezel1234567890';
 
 // Middleware to verify JWT tokens
 const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) {
+  const authHeader = req.headers.authorization;
+  console.log('Authorization Header:', authHeader);
+  if (!authHeader) {
+    console.log('No token provided');
     return res.status(403).json({ message: 'No token provided' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+  // Use regular expression to extract the token
+  const tokenRegex = /Bearer\s(.+)/;
+  const match = authHeader.match(tokenRegex);
+  console.log('Match:', match);
+  if (!match || match.length < 2) {
+    console.log('No token provided after extraction');
+    return res.status(403).json({ message: 'No token provided' });
+  }
+  const token = match[1];
+  console.log('Extracted Token:', token);
+
+  const secret = process.env.JWT_SECRET || 'princezel1234567890';
+
+  jwt.verify(token, secret, (err) => {
     if (err) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      if (err.name === 'TokenExpiredError') {
+        // Token has expired
+        console.log('Token expired:', err.expiredAt);
+      } else {
+        // Other JWT verification errors
+        console.log('Error:', err);
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
     }
-    req.user = decoded; // Attach decoded token to request object
     next();
   });
 };
@@ -162,8 +183,10 @@ router.get('/profile', verifyToken, async (req, res) => {
 // Route for refreshing the token
 router.post('/refresh-token', verifyToken, (req, res) => {
   try {
-    const { id, email } = req.user;
-    const token = jwt.sign({ id, email }, JWT_SECRET, { expiresIn: '1h' });
+    const id = req.body.user;
+    console.log('Received refresh token request for user: ', id);
+    const token = jwt.sign({ id }, JWT_SECRET, { expiresIn: '1h' });
+    console.log('Generated token:', token);
     res.json({ token });
   } catch (error) {
     res.status(500).json({ message: 'Error refreshing token', error: error.message });
@@ -176,7 +199,7 @@ router.get('/user/:id', async (req, res) => {
 
     // Log the incoming request and the user ID
     console.log(`Incoming GET request to /user/${userId}`);
-    
+
     // Check if the provided ID is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       console.log('Invalid User ID');
@@ -219,13 +242,13 @@ router.put('/update-user/:id', upload.single('profileImage'), async (req, res) =
       return res.status(404).json({ message: 'User not found' });
     }
 
-        // Check if the new email already exists
-        if (updateData.email) {
-          const existingUser = await User.findOne({ email: updateData.email, _id: { $ne: userId } });
-          if (existingUser) {
-            return res.status(400).json({ message: 'Email already in use' });
-          }
-        }
+    // Check if the new email already exists
+    if (updateData.email) {
+      const existingUser = await User.findOne({ email: updateData.email, _id: { $ne: userId } });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email already in use' });
+      }
+    }
 
     // Update user fields with provided data
     const { firstName, lastName, email, phoneNumber } = updateData;

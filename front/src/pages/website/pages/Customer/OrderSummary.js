@@ -23,8 +23,8 @@ const OrderSummary = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { selectedShipment, quote } = location.state || {};
-    console.log('Selected Shipment:', selectedShipment);
-    console.log('Quotes:', quote);
+    // console.log('Selected Shipment:', selectedShipment);
+    // console.log('Quotes:', quote);
     const [loading, setLoading] = useState(true);
     const [shipmentDetails, setShipmentDetails] = useState(null);
     const [preferredDate, setPreferredDate] = useState(null);
@@ -55,7 +55,7 @@ const OrderSummary = () => {
                     setShipmentDetails(shipmentDetails);
                 }
             } catch (error) {
-                console.error('Error fetching shipment details:', error);
+                // console.error('Error fetching shipment details:', error);
             } finally {
                 setLoading(false);
             }
@@ -81,44 +81,44 @@ const OrderSummary = () => {
     const handlePaymentOrder = async () => {
         if (!stripe || !elements) {
             toast.error('Stripe is not ready');
-            console.warn('Stripe not ready: stripe or elements is undefined');
+            // console.warn('Stripe not ready: stripe or elements is undefined');
             return;
         }
 
         // Validate required fields
         if (!customerName) {
             toast.error("Customer name is required");
-            console.warn("Customer name validation failed");
+            // console.warn("Customer name validation failed");
             return;
         }
         if (!pickupAddress) {
             toast.error("Pickup address is required");
-            console.warn("Pickup address validation failed");
+            // console.warn("Pickup address validation failed");
             return;
         }
         if (!contactPhone) {
             toast.error("Contact phone is required");
-            console.warn("Contact phone validation failed");
+            // console.warn("Contact phone validation failed");
             return;
         }
         if (!contactEmail) {
             toast.error("Contact email is required");
-            console.warn("Contact email validation failed");
+            // console.warn("Contact email validation failed");
             return;
         }
         if (!dropoffAddress) {
             toast.error("Dropoff address is required");
-            console.warn("Dropoff address validation failed");
+            // console.warn("Dropoff address validation failed");
             return;
         }
         if (!preferredDate) {
             toast.error("Preferred collection date is required");
-            console.warn("Preferred collection date validation failed");
+            // console.warn("Preferred collection date validation failed");
             return;
         }
         if (grandTotal === 0 || isNaN(grandTotal)) {
             toast.error("Grand total is missing or invalid");
-            console.warn("Grand total validation failed: ", grandTotal);
+            // console.warn("Grand total validation failed: ", grandTotal);
             return;
         }
 
@@ -136,16 +136,16 @@ const OrderSummary = () => {
                 grandTotal,
                 status: 'In Progress',
             };
-            console.log('Order Data:', orderData);
+            // console.log('Order Data:', orderData);
 
             // Send order data to server to create order and Payment Intent
-            const response = await axios.post(`http://localhost:3003/shipafrik/payment-orders`, orderData);
+            const response = await axios.post(`${ip}/shipafrik/payment-orders`, orderData);
             const { clientSecret, paymentIntent, order } = response.data;
 
-            console.log('Payment Response: ', response.data);
+            // console.log('Payment Response: ', response.data);
 
             if (clientSecret) {
-                console.log('Client Secret:', clientSecret);
+                // console.log('Client Secret:', clientSecret);
 
                 const cardElement = elements.getElement(CardElement);
 
@@ -160,26 +160,26 @@ const OrderSummary = () => {
                     },
                 });
 
-                console.log('Confirmed Payment Intent: ', confirmedPaymentIntent);
+                // console.log('Confirmed Payment Intent: ', confirmedPaymentIntent);
 
                 if (error) {
-                    console.error('Payment confirmation error:', error);
+                    // console.error('Payment confirmation error:', error);
                     toast.error('Payment failed: ' + error.message);
                     return;
                 }
 
                 if (confirmedPaymentIntent.status === 'succeeded') {
-                    console.log('Payment succeeded:', confirmedPaymentIntent);
-                    console.log('Order placed successfully:', order);
+                    // console.log('Payment succeeded:', confirmedPaymentIntent);
+                    // console.log('Order placed successfully:', order);
                     toast.success('Payment successful and order placed!');
                     navigate('/order-confirmation', { state: { order } });
                 }
             } else {
                 toast.error('Failed to create payment intent');
-                console.error('Client secret not received from server');
+                // console.error('Client secret not received from server');
             }
         } catch (error) {
-            console.error('Error placing order:', error);
+            // console.error('Error placing order:', error);
             toast.error('Failed to place order: ' + (error.response?.data?.message || error.message));
         }
     };

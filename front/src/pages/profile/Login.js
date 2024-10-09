@@ -36,15 +36,15 @@ function Login() {
     }
 
     try {
-      console.log('Attempting login...');
+      // console.log('Attempting login...');
 
       // Authenticate user with server
       const response = await axios.post(`${ip}/shipafrik/login`, { email, password });
-      console.log('Response: ', response.data);
+      // console.log('Response: ', response.data);
 
       const { token, user } = response.data;
-      console.log('User:', user);
-      console.log('Token:', token);
+      // console.log('User:', user);
+      // console.log('Token:', token);
       // Handle successful login
       setCurrentUser(user);
 
@@ -54,9 +54,9 @@ function Login() {
       const tokenExpiration = tokenCreationTime + tokenValidityPeriodInMillis;
       login(user, token, tokenExpiration);
       setAuthData({ user, token, tokenExpiration });
-      
+
       const userResponse = await axios.get(`${ip}/shipafrik/user/${user}`);
-      console.log('User Data:', userResponse.data)
+      // console.log('User Data:', userResponse.data)
 
       if (userResponse.data.userType === 'SHIPPER') {
         navigate('/shipper-hub', { state: { successMessage: 'Logged in successfully!' } });
@@ -67,7 +67,7 @@ function Login() {
       }
       toast.success('Logged in successfully!');
     } catch (error) {
-      console.error('Error during login:', error);
+      // console.error('Error during login:', error);
       const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
       setErrorMessage(errorMessage);
       setShowErrorAlert(true);

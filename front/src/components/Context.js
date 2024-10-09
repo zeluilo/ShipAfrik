@@ -1,7 +1,7 @@
 // Import necessary modules
 import axios from 'axios';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-
+import { ip  } from '../pages/constants';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -16,15 +16,16 @@ export const AuthProvider = ({ children }) => {
   const refreshToken = async () => {
     try {
       const token = localStorage.getItem('token');
+      // console.log('Token:', token);
       if (!token) {
-        console.error('No token found in localStorage');
+        // console.error('No token found in LocalStorage');
         return;
       }
 
       const userData = JSON.parse(localStorage.getItem('authData')); // Assuming user details are stored in localStorage
-      console.log('User Data:', userData); 
+      // console.log('User Data:', userData); 
 
-      const response = await axios.post('http://localhost:3001/shipafrik/refresh-token', userData, {
+      const response = await axios.post(`${ip}/shipafrik/refresh-token`, userData, {
         headers: {
           'Authorization': `Bearer ${token}` // Include "Bearer" prefix
         }
@@ -32,23 +33,28 @@ export const AuthProvider = ({ children }) => {
 
       if (response.status === 200) {
         const data = response.data;
-        console.log('Data:', response);
-        localStorage.setItem('token', data.token);
-        console.log('Token:', data.token);
-        localStorage.setItem('tokenExpiration', data.expiration);
-        console.log('Expiration:', data.expiration);
-        console.log('Token refreshed successfully.');
+        // console.log('Data:', response);
+
+        const token = localStorage.setItem('token', data.token);
+        // console.log('Token:', token);
+
+        const tokenValidityPeriodInMillis = 3600000; // 1 hour in milliseconds
+        const tokenCreationTime = new Date().getTime(); // Current time
+        const tokenExpiration = tokenCreationTime + tokenValidityPeriodInMillis;
+        localStorage.setItem('tokenExpiration', tokenExpiration);
+
+        setAuthData({ currentUser, token, tokenExpiration });
       } else {
-        console.error('Failed to refresh token:', response.statusText);
+        // console.error('Failed to refresh token:', response.statusText);
         // Handle token refresh failure (e.g., redirect to login page)
       }
     } catch (error) {
-      console.error('Error refreshing token:', error);
+      // console.error('Error refreshing token:', error);
       // Handle token refresh failure (e.g., redirect to login page)
 
       // If the error message is "Token expired", refresh the token
       if (error.response && error.response.data && error.response.data.message === "Token expired") {
-        console.log('Token expired. Refreshing token...');
+        // console.log('Token expired. Refreshing token...');
         await refreshToken();
       }
     }
@@ -56,13 +62,13 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const checkTokenExpiration = async () => {
-      console.log('Checking token expiration...');
+      // console.log('Checking token expiration...');
       const tokenExpiration = localStorage.getItem('tokenExpiration');
       if (tokenExpiration && Date.now() > parseInt(tokenExpiration)) {
-        console.log('Token expired. Refreshing token...');
+        // console.log('Token expired. Refreshing token...');
         await refreshToken();
       } else {
-        console.log('Token is still valid.');
+        // console.log('Token is still valid.');
       }
     };
 
@@ -80,7 +86,7 @@ export const AuthProvider = ({ children }) => {
         setCurrentUser(JSON.parse(storedUser));
         setLoggedIn(true);
       } catch (error) {
-        console.error('Error parsing storedUser:', error);
+        // console.error('Error parsing storedUser:', error);
       }
     }
 
@@ -90,7 +96,7 @@ export const AuthProvider = ({ children }) => {
         setAuthData(JSON.parse(storedAuthData));
         setLoggedIn(true);
       } catch (error) {
-        console.error('Error parsing storedAuth Data:', error);
+        // console.error('Error parsing storedAuth Data:', error);
       }
     }
   }, []);
@@ -143,7 +149,7 @@ export const useAuth = () => {
 
 export const refreshToken = async () => {
   try {
-    const response = await axios.post('http://localhost:3001/universe/refresh-token', null, {
+    const response = await axios.post(`${ip}/shipafrik/refresh-token`, null, {
       headers: {
         'Authorization': `${localStorage.getItem('token')}`
       }
@@ -152,13 +158,13 @@ export const refreshToken = async () => {
       const data = response.data;
       localStorage.setItem('token', data.token);
       localStorage.setItem('tokenExpiration', data.expiration);
-      console.log('Token refreshed successfully.');
+      // console.log('Token refreshed successfully.');
     } else {
-      console.error('Failed to refresh token:', response.statusText);
+      // console.error('Failed to refresh token:', response.statusText);
       // Handle token refresh failure (e.g., redirect to login page)
     }
   } catch (error) {
-    console.error('Error refreshing token:', error);
+    // console.error('Error refreshing token:', error);
     // Handle token refresh failure (e.g., redirect to login page)
   }
 };

@@ -101,7 +101,7 @@ const Availability = () => {
                         'Content-Type': 'application/json',
                     },
                 });
-                console.log('Shipment updated successfully:', response.data);
+                // console.log('Shipment updated successfully:', response.data);
             } else {
                 response = await axios.post(`${ip}/shipafrik/create-shipment`, payload, {
                     headers: {
@@ -170,7 +170,7 @@ const Availability = () => {
 
             const response = await axios.get(`${ip}/shipafrik/shipments/${currentUser}`);
             setShipments(response.data);
-            console.log('Shipments: ', response.data)
+            // console.log('Shipments: ', response.data)
 
             // const estimatedDepartureDate = new Date(response.data.estimatedVesselDepartureDate);
             // const date = estimatedDepartureDate.getDate() - 2;
@@ -280,7 +280,7 @@ const Availability = () => {
     };
 
     const fetchShipmentEdit = async (id) => {
-        console.log('Fetching shipment with ID:', id);
+        // console.log('Fetching shipment with ID:', id);
         setLoading(true); // Set loading to true
         try {
             const response = await axios.get(`${ip}/shipafrik/shipment/${currentUser}/${id}`);
@@ -297,7 +297,7 @@ const Availability = () => {
             setIsDoorToDoorChecked(response.data.doorToDoorChecked);
             setIsWithdrawn(response.data.withdraw);
         } catch (error) {
-            console.error('Error fetching shipment details:', error);
+            // console.error('Error fetching shipment details:', error);
             toast.error('Failed to fetch shipment details');
         } finally {
             setLoading(false); // Reset loading state
@@ -376,7 +376,7 @@ const Availability = () => {
 
             setData(combined); // Set the combined city-country list for Select component
         } catch (error) {
-            console.error('Error fetching countries and cities:', error);
+            // console.error('Error fetching countries and cities:', error);
         }
     };
 
@@ -392,7 +392,7 @@ const Availability = () => {
             });
 
             if (response.status === 200) {
-                console.log('Withdraw status updated successfully:', response.data);
+                // console.log('Withdraw status updated successfully:', response.data);
                 setFormData(prevData => ({
                     ...prevData,
                     withdraw: newWithdrawStatus
@@ -400,11 +400,11 @@ const Availability = () => {
                 // toast.success('Withdraw status updated successfully!');
                 fetchShipments()
             } else {
-                console.error('Error updating withdraw status:', response.status);
+                // console.error('Error updating withdraw status:', response.status);
                 // toast.error('Failed to update withdraw status.');
             }
         } catch (error) {
-            console.error('Error:', error);
+            // console.error('Error:', error);
             // toast.error('An error occurred while updating withdraw status.');
         }
     };

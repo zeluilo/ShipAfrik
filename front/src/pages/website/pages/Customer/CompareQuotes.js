@@ -60,7 +60,7 @@ const CompareQuotes = () => {
     };
 
     const handleBuyNow = () => {
-        console.log('Navigating with shipment and quote data:', { selectedShipment, quote });
+        // console.log('Navigating with shipment and quote data:', { selectedShipment, quote });
         window.scrollTo(0, 0);
         navigate('/order-summary', { state: { selectedShipment, quote } });
     };

@@ -23,7 +23,7 @@ const OrderConfirmation = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { order } = location.state || {};
-    console.log('Orders:', order);
+    // console.log('Orders:', order);
 
     return (
         <section id="constructions" className="constructions section bg-dark min-vh-100 d-flex" style={{ textAlign: 'center' }}>

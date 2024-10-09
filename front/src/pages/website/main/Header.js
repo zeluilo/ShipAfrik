@@ -22,14 +22,14 @@ function Header() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    console.log('Current User Details:', currentUser);
+    // console.log('Current User Details:', currentUser);
   }, [currentUser]);
 
   // useEffect(() => {
-  //   console.log('isLoggedIn:', isLoggedIn);
-  //   console.log('location.pathname:', location.pathname);
+    // console.log('isLoggedIn:', isLoggedIn);
+    // console.log('location.pathname:', location.pathname);
   //   if (!isLoggedIn && location.pathname !== '/login') {
-  //     console.log('Redirecting to /login');
+      // console.log('Redirecting to /login');
   //     navigate('/');
   //   }
   // }, [isLoggedIn, location.pathname, navigate]);
@@ -44,10 +44,10 @@ function Header() {
       try {
         setLoading(true); // Set loading to true before fetching data
         const response = await axios.get(`${ip}/shipafrik/user/${currentUser}`);
-        console.log('User Data:', response.data);
+        // console.log('User Data:', response.data);
         setUser(response.data);
       } catch (error) {
-        console.error('Error fetching user:', error);
+        // console.error('Error fetching user:', error);
       } finally {
         setLoading(false); // Set loading to false once data is fetched
       }
@@ -59,8 +59,10 @@ function Header() {
   useEffect(() => {
     const toggleScrolled = () => {
       const header = document.querySelector('#header');
+      const selectBody = document.querySelector('body');
       if (header && (header.classList.contains('scroll-up-sticky') || header.classList.contains('sticky-top') || header.classList.contains('fixed-top'))) {
         setIsScrolled(window.scrollY > 100);
+        window.scrollY > 100 ? selectBody.classList.add('scrolled') : selectBody.classList.remove('scrolled');
       }
     };
 
@@ -68,6 +70,38 @@ function Header() {
       setScrollTopActive(window.scrollY > 100);
     };
 
+    // Mobile nav toggle
+    const mobileNavToggleBtn = document.querySelector('.mobile-nav-toggle');
+    const mobileNavToggle = () => {
+      document.querySelector('body').classList.toggle('mobile-nav-active');
+      mobileNavToggleBtn.classList.toggle('bi-list');
+      mobileNavToggleBtn.classList.toggle('bi-x');
+    };
+
+    if (mobileNavToggleBtn) {
+      mobileNavToggleBtn.addEventListener('click', mobileNavToggle);
+    }
+
+    // Hide mobile nav on same-page/hash links
+    document.querySelectorAll('#navmenu a').forEach(navmenu => {
+      navmenu.addEventListener('click', () => {
+        if (document.querySelector('.mobile-nav-active')) {
+          mobileNavToggle();
+        }
+      });
+    });
+
+    // Toggle mobile nav dropdowns
+    document.querySelectorAll('.navmenu .toggle-dropdown').forEach(navmenu => {
+      navmenu.addEventListener('click', function (e) {
+        e.preventDefault();
+        this.parentNode.classList.toggle('active');
+        this.parentNode.nextElementSibling.classList.toggle('dropdown-active');
+        e.stopImmediatePropagation();
+      });
+    });
+
+    // AOS initialization
     AOS.init({
       duration: 600,
       easing: 'ease-in-out',
@@ -75,10 +109,12 @@ function Header() {
       mirror: false,
     });
 
+    // GLightbox initialization
     GLightbox({
       selector: '.glightbox',
     });
 
+    // Isotope initialization
     document.querySelectorAll('.isotope-layout').forEach((isotopeItem) => {
       let layout = isotopeItem.getAttribute('data-layout') ?? 'masonry';
       let filter = isotopeItem.getAttribute('data-default-filter') ?? '*';
@@ -104,23 +140,31 @@ function Header() {
       });
     });
 
+    // Swiper initialization
     document.querySelectorAll('.init-swiper').forEach((swiperElement) => {
       let config = JSON.parse(swiperElement.querySelector('.swiper-config').innerHTML.trim());
       new Swiper(swiperElement, config);
     });
 
+    // PureCounter initialization
     new PureCounter();
 
+    // Scroll event listeners
     window.addEventListener('scroll', toggleScrolled);
     window.addEventListener('scroll', toggleScrollTop);
     window.addEventListener('load', toggleScrolled);
     window.addEventListener('load', toggleScrollTop);
 
+    // Cleanup function
     return () => {
       window.removeEventListener('scroll', toggleScrolled);
       window.removeEventListener('scroll', toggleScrollTop);
+      if (mobileNavToggleBtn) {
+        mobileNavToggleBtn.removeEventListener('click', mobileNavToggle);
+      }
     };
   }, []);
+
 
   const handleMobileNavToggle = () => {
     setMobileNavActive(!mobileNavActive);
@@ -135,7 +179,7 @@ function Header() {
             <h1 className="sitename">SHIPAFRIK</h1> <span>.</span>
           </Link>
 
-          <nav id="navmenu" className={`navmenu ${mobileNavActive ? 'mobile-nav-active' : ''}`}>
+          <nav id="navmenu" className="navmenu">
             <ul>
               <li>
                 <Link to="/" className="active">
@@ -158,24 +202,23 @@ function Header() {
               <li>
                 <a href="#contact">Contact Us</a>
               </li>
-
               {!isLoggedIn ? (
                 <li>
                   <Link to="/login">Sign In</Link>
                 </li>
               ) : (
-                <li className="nav-item dropdown pe-3">
-
-                  <Link className="nav-link nav-profile d-flex align-items-center pe-0" href="/" aria-expanded="false">
+                <li className="dropdown">
+                  <Link to="/profile" aria-expanded="false">
                     <img src={`${process.env.PUBLIC_URL}/profile.png`} style={{ height: 30 }} alt="Profile" className="rounded-circle" />
                     {loading ? (
                       <span className="d-none d-md-block ps-2">Loading...</span>
                     ) : (
-                      <span className="d-none d-md-block ps-2">{user?.firstName} {user?.lastName}</span>
+                      <span className="ps-2">{user?.firstName} {user?.lastName}</span>
                     )}
+                      <i class="bi bi-chevron-down toggle-dropdown"></i>
                   </Link>
 
-                  <ul className="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile" >
+                  <ul className="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                     <li className="dropdown-header">
                       <h6>{user?.firstName} {user?.lastName}</h6>
                       <span>{user?.userType}</span>
@@ -183,7 +226,6 @@ function Header() {
                     <li>
                       <hr className="dropdown-divider" />
                     </li>
-
                     <li>
                       <Link className="dropdown-item d-flex align-items-center" to="/profile">
                         <i className="bi bi-person"></i>
@@ -193,57 +235,38 @@ function Header() {
                     <li>
                       <hr className="dropdown-divider" />
                     </li>
-                    {user?.userType === 'SHIPPER' ? (
-                      <>
-                        <li>
-                          <Link className="dropdown-item d-flex align-items-center" to="/shipper-hub">
-                            <i className="bi bi-truck"></i>
-                            <span>Shipper Hub</span>
-                          </Link>
-                        </li>
-
-                        <li>
-                          <hr className="dropdown-divider" />
-                        </li>
-                      </>
-                    ) : null}
-
-                    {user?.userType === 'USER' ? (
-                      <>
-                        <li>
-                          <Link className="dropdown-item d-flex align-items-center" to="/customer-hub">
-                            <i className="bi bi-box"></i>
-                            <span>My Shipments</span>
-                          </Link>
-                        </li>
-
-                        <li>
-                          <hr className="dropdown-divider" />
-                        </li>
-                      </>
-                    ) : null}
-
-                    {user?.userType === 'ADMIN' ? (
-                      <>
-                        <li>
-                          <Link className="dropdown-item d-flex align-items-center" to="/admin-dashboard">
-                            <i className="bi bi-gear"></i>
-                            <span>Admin Dashboard</span>
-                          </Link>
-                        </li>
-
-                        <li>
-                          <hr className="dropdown-divider" />
-                        </li>
-                      </>
-                    ) : null}
-
-
+                    {user?.userType === 'SHIPPER' && (
+                      <li>
+                        <Link className="dropdown-item d-flex align-items-center" to="/shipper-hub">
+                          <i className="bi bi-truck"></i>
+                          <span>Shipper Hub</span>
+                        </Link>
+                        <hr className="dropdown-divider" />
+                      </li>
+                    )}
+                    {user?.userType === 'USER' && (
+                      <li>
+                        <Link className="dropdown-item d-flex align-items-center" to="/customer-hub">
+                          <i className="bi bi-box"></i>
+                          <span>My Shipments</span>
+                        </Link>
+                        <hr className="dropdown-divider" />
+                      </li>
+                    )}
+                    {user?.userType === 'ADMIN' && (
+                      <li>
+                        <Link className="dropdown-item d-flex align-items-center" to="/admin-dashboard">
+                          <i className="bi bi-gear"></i>
+                          <span>Admin Dashboard</span>
+                        </Link>
+                        <hr className="dropdown-divider" />
+                      </li>
+                    )}
                     <li>
-                      <a className="dropdown-item align-items-center" href="/">
+                      <Link className="dropdown-item d-flex align-items-center" to='/'>
                         <i className="bi bi-gear"></i>
                         <span>Settings</span>
-                      </a>
+                      </Link>
                     </li>
                     <li>
                       <hr className="dropdown-divider" />
@@ -254,9 +277,9 @@ function Header() {
                         <span>Sign Out</span>
                       </Link>
                     </li>
-
                   </ul>
                 </li>
+
               )}
 
 

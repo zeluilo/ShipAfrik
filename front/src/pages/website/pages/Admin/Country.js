@@ -21,9 +21,9 @@ const Country = () => {
       const response = await axios.get(`${ip}/shipafrik/get-countries`);
       setCountries(response.data);
       setFilteredCountries(response.data);
-      console.log('Countries fetched successfully:', response.data);
+      // console.log('Countries fetched successfully:', response.data);
     } catch (error) {
-      console.error('Error fetching countries:', error);
+      // console.error('Error fetching countries:', error);
       // setError('Failed to fetch countries.');
     }
   };
@@ -42,7 +42,7 @@ const Country = () => {
       setIsCreatingNewCountry(false);
       setSelectedCountry(value);
     }
-    console.log('Selected country:', value);
+    // console.log('Selected country:', value);
   };
 
   // Handle city change
@@ -50,7 +50,7 @@ const Country = () => {
     const updatedCities = [...cities];
     updatedCities[index] = value.trim(); // Remove leading/trailing spaces
     setCities(updatedCities);
-    console.log(`City ${index} changed to:`, value);
+    // console.log(`City ${index} changed to:`, value);
   };
 
   // Add a new city input
@@ -66,50 +66,50 @@ const Country = () => {
     e.preventDefault();
     const filteredCities = cities.filter(city => city.trim() !== '');
 
-    console.log('Filtered cities before submission:', filteredCities);
+    // console.log('Filtered cities before submission:', filteredCities);
 
     try {
       if (isCreatingNewCountry) {
-        console.log('Submitting new country:', newCountryName);
-        console.log('Submitting cities:', filteredCities);
+        // console.log('Submitting new country:', newCountryName);
+        // console.log('Submitting cities:', filteredCities);
 
         const response = await axios.post(`${ip}/shipafrik/add-country`, {
           name: newCountryName,
           cities: filteredCities
         });
 
-        console.log('New country created:', response.data);
+        // console.log('New country created:', response.data);
 
         if (response.data.country && response.data.country.cities) {
-          console.log('Cities added to new country:', response.data.country.cities);
+          // console.log('Cities added to new country:', response.data.country.cities);
           setSuccessMessage('Country and cities created successfully.');
           setNewCountryName('');
           setCities([]);
           setError('');
 
         } else {
-          console.warn('No cities were returned for the new country.');
+          // console.warn('No cities were returned for the new country.');
         }
 
       } else {
-        console.log('Adding cities to existing country:', selectedCountry);
-        console.log('Submitting cities:', filteredCities);
+        // console.log('Adding cities to existing country:', selectedCountry);
+        // console.log('Submitting cities:', filteredCities);
 
         try {
           const response = await axios.put(`${ip}/shipafrik/add-city/${selectedCountry}`, {
             cities: filteredCities
           });
 
-          console.log('Response from server:', response.data);
-          console.log('Cities added to country:', selectedCountry);
-          console.log('Country updated with cities:', response.data);
+          // console.log('Response from server:', response.data);
+          // console.log('Cities added to country:', selectedCountry);
+          // console.log('Country updated with cities:', response.data);
 
           setSuccessMessage('Cities added to country successfully.');
           setError('');
 
 
         } catch (error) {
-          console.error('Error while updating cities:', error);
+          // console.error('Error while updating cities:', error);
           setError('Failed to update cities.');
         }
       }
@@ -124,7 +124,7 @@ const Country = () => {
       setSelectedCountry('');
 
     } catch (error) {
-      console.error('Error submitting form:', error);
+      // console.error('Error submitting form:', error);
       setError('Failed to submit form.');
     }
   };
@@ -152,10 +152,10 @@ const Country = () => {
   const handleDeleteCountry = async (id) => {
     try {
       await axios.delete(`${ip}/shipafrik/delete-country/${id}`);
-      console.log('Country deleted:', id);
+      // console.log('Country deleted:', id);
       fetchCountries();
     } catch (error) {
-      console.error('Error deleting country:', error);
+      // console.error('Error deleting country:', error);
       setError('Failed to delete country.');
     }
   };
@@ -164,10 +164,10 @@ const Country = () => {
   const handleDeleteCity = async (countryId, cityId) => {
     try {
       await axios.delete(`${ip}/shipafrik/delete-city/${countryId}/city/${cityId}`);
-      console.log('City deleted:', cityId);
+      // console.log('City deleted:', cityId);
       fetchCountries();
     } catch (error) {
-      console.error('Error deleting city:', error);
+      // console.error('Error deleting city:', error);
       setError('Failed to delete city.');
     }
   };

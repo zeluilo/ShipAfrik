@@ -8,7 +8,7 @@ const Orders = () => {
     const { currentUser } = useAuth();
 
     useEffect(() => {
-        console.log('Order User Details:', currentUser);
+        // console.log('Order User Details:', currentUser);
     }, [currentUser]);
 
     const [orders, setOrders] = useState([]);
@@ -40,7 +40,7 @@ const Orders = () => {
     const fetchOrders = async () => {
         try {
             const response = await axios.get(`${ip}/shipafrik/orders/${currentUser}`);
-            console.log('Fetched Orders:', response.data.orders);
+            // console.log('Fetched Orders:', response.data.orders);
 
             const ordersWithShipments = await Promise.all(
                 response.data.orders.map(async (order) => {
@@ -51,11 +51,11 @@ const Orders = () => {
                     };
                 })
             );
-            console.log('Fetched Orders with Shipments:', ordersWithShipments);
+            // console.log('Fetched Orders with Shipments:', ordersWithShipments);
 
             setOrders(ordersWithShipments);
         } catch (error) {
-            console.error('Error fetching orders:', error);
+            // console.error('Error fetching orders:', error);
         }
     };
 
@@ -75,7 +75,7 @@ const Orders = () => {
             setShowStatusModal(false);
             fetchOrders();
         } catch (error) {
-            console.error('Error updating status:', error);
+            // console.error('Error updating status:', error);
             toast.error('Failed to update order status');
         }
     };

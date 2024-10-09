@@ -201,7 +201,7 @@ h6 {
 # Navigation Menu
 --------------------------------------------------------------*/
 /* Desktop Navigation */
-@media (min-width: 1200px) {
+@media (min-width: 120px) {
   .navmenu {
     padding: 0;
   }
@@ -356,7 +356,7 @@ h6 {
 }
 
 /* Mobile Navigation */
-@media (max-width: 1199px) {
+@media (max-width: 1201px) {
   .mobile-nav-toggle {
     color: var(--nav-color);
     font-size: 28px;
@@ -397,6 +397,31 @@ h6 {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    white-space: nowrap;
+    transition: 0.3s;
+  }
+
+  .navmenu h6 {
+    color: var(--nav-dropdown-color);
+    padding: 5px 0px;
+    font-family: var(--nav-font);
+    font-size: 25px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    transition: 0.3s;
+  }
+
+  .navmenu span {
+    color: var(--nav-dropdown-color);
+    padding: 5px 0px;
+    font-family: var(--nav-font);
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     white-space: nowrap;
     transition: 0.3s;
   }

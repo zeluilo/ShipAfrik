@@ -32,7 +32,7 @@ const Quotes = () => {
             const quotesResponse = await axios.get(`${ip}/shipafrik/quotes/${currentUser}`);
             const quotes = quotesResponse.data;
             setQuotes(quotes);
-            console.log('Quotes:', quotes);
+            // console.log('Quotes:', quotes);
 
             // Check if no shipments are found
             if (quotes.length === 0) {
@@ -43,7 +43,7 @@ const Quotes = () => {
 
             setTotalPages(Math.ceil(quotes.length / pageSize));
         } catch (error) {
-            console.error('Error fetching quotes:', error);
+            // console.error('Error fetching quotes:', error);
             // toast.error('Failed to fetch quotes');
         } finally {
             setLoading(false); // Set loading to false once data is fetched
@@ -58,7 +58,7 @@ const Quotes = () => {
         // Fetch all shipments
         const shipmentsResponse = await axios.get(`${ip}/shipafrik/shipments`);
         const shipments = shipmentsResponse.data;
-        console.log('Shipments:', shipments);
+        // console.log('Shipments:', shipments);
 
         if (quote) {
             // Filter shipments by destination city
@@ -68,7 +68,7 @@ const Quotes = () => {
 
             if (filteredByCity.length === 0) {
                 setNoShipmentsMessage('No shipments found in your city.');
-                console.log('No shipments found in your city.');
+                // console.log('No shipments found in your city.');
 
                 // If no shipments are found in the city, display all shipments (quotes)
                 setShipments(shipments);
@@ -214,10 +214,10 @@ const Quotes = () => {
                 setSelectedShipment(shipment._id);
                 setShowDetails(true);
             }
-            console.log('Selected Shipment:', shipmentDetails);
+            // console.log('Selected Shipment:', shipmentDetails);
 
         } catch (error) {
-            console.error('Error fetching shipment details:', error);
+            // console.error('Error fetching shipment details:', error);
             // Handle the error (e.g., show an error message)
         }
     };
@@ -228,7 +228,7 @@ const Quotes = () => {
     };
 
     const handleBuyNow = () => {
-        console.log('Navigating with shipment and quote data:', { selectedShipment, quote });
+        // console.log('Navigating with shipment and quote data:', { selectedShipment, quote });
         window.scrollTo(0, 0);
         navigate('/order-summary', { state: { selectedShipment, quote } });
     };
@@ -240,7 +240,7 @@ const Quotes = () => {
 
             if (response.status === 200) {
                 // Handle successful deletion (e.g., remove the deleted quote from the UI)
-                console.log('Quote deleted successfully:', response.data);
+                // console.log('Quote deleted successfully:', response.data);
                 await fetchQuotes()
 
                 // Check if no quotes are found after filtering
@@ -251,7 +251,7 @@ const Quotes = () => {
                 }
             }
         } catch (error) {
-            console.error('Error deleting quote:', error);
+            // console.error('Error deleting quote:', error);
             // Optionally, show an error message to the user
         }
     };

@@ -45,10 +45,10 @@ const BecomeShipper = () => {
 
     // Log the file details
     if (file) {
-      console.log('Selected file:', file);
-      console.log('File name:', file.name);
-      console.log('File size:', file.size);
-      console.log('File type:', file.type);
+      // console.log('Selected file:', file);
+      // console.log('File name:', file.name);
+      // console.log('File size:', file.size);
+      // console.log('File type:', file.type);
     }
   };
 
@@ -74,7 +74,7 @@ const BecomeShipper = () => {
           formData.append(key, form[key]);
         });
   
-        console.log('Submitting registration form with data:', formData); // Log the form data
+        // console.log('Submitting registration form with data:', formData); // Log the form data
   
         const response = await axios.post(`${ip}/shipafrik/register`, formData, {
           headers: {
@@ -82,7 +82,7 @@ const BecomeShipper = () => {
           },
         });
   
-        console.log('Response from server:', response.data); // Log server response
+        // console.log('Response from server:', response.data); // Log server response
   
         // Handle response based on status code
         if (response.status === 201) { // Created
@@ -105,7 +105,7 @@ const BecomeShipper = () => {
           toast.error('An unexpected error occurred. Please try again.');
         }
       } catch (error) {
-        console.error('Error registering Customer:', error);
+        // console.error('Error registering Customer:', error);
   
         // Handle different types of errors
         if (error.response) {
@@ -122,7 +122,7 @@ const BecomeShipper = () => {
         const formData = new FormData();
         formData.append('image', form.image);
   
-        console.log('Updating profile image with data:', formData); // Log the form data
+        // console.log('Updating profile image with data:', formData); // Log the form data
   
         const response = await axios.put(`${ip}/shipafrik/update-user/${currentUser}`, formData, {
           headers: {
@@ -130,7 +130,7 @@ const BecomeShipper = () => {
           },
         });
   
-        console.log('Response from server:', response.data); // Log server response
+        // console.log('Response from server:', response.data); // Log server response
   
         if (response.status === 200) { // OK
           toast.success('Profile image updated successfully!');
@@ -142,7 +142,7 @@ const BecomeShipper = () => {
           toast.error('An unexpected error occurred. Please try again.');
         }
       } catch (error) {
-        console.error('Error updating profile image:', error);
+        // console.error('Error updating profile image:', error);
   
         if (error.response) {
           toast.error(error.response.data.message || 'Error updating profile image. Please try again.');

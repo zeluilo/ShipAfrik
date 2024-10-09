@@ -30,7 +30,7 @@ const PaymentCallback = () => {
                         navigate('/customer-hub');
                     }
                 } catch (error) {
-                    console.error('Error verifying payment status:', error);
+                    // console.error('Error verifying payment status:', error);
                     toast.error('Error verifying payment status.');
                     navigate('/customer-hub');
                 }
