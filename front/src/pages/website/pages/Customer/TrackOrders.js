@@ -12,6 +12,7 @@ const TrackOrders = () => {
 
     // Define shipment statuses
     const statuses = [
+        'Items Collected',
         'In Progress',
         'Shipment Booked',
         'Shipment Has Left the Dock',

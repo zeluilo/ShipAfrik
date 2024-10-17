@@ -17,6 +17,7 @@ const Orders = () => {
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [newStatus, setNewStatus] = useState('');
     const [combinedData, setCombinedData] = useState([]);
+    const [user, setUserDetails] = useState(null);
 
     // Sorting, filtering, and pagination states
     const [sortOrderInProgress, setSortOrderInProgress] = useState('orderRefAsc');
@@ -26,12 +27,14 @@ const Orders = () => {
     const [filterRevenueRange, setFilterRevenueRange] = useState([0, 10000]); // Example range
 
     const [sortOrderShipped, setSortOrderShipped] = useState('orderRefAsc');
+    const [sortOrderCollected, setSortOrderCollected] = useState('orderRefAsc');
 
     // Pagination state
     const [currentPageInProgress, setCurrentPageInProgress] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10); // Items per page
 
     const [currentPageShipped, setCurrentPageShipped] = useState(1);
+    const [currentPageCollected, setCurrentPageCollected] = useState(1);
 
     const handleViewOrders = (order) => {
         setSelectedOrderId(order);
@@ -51,7 +54,7 @@ const Orders = () => {
                     };
                 })
             );
-            // console.log('Fetched Orders with Shipments:', ordersWithShipments);
+            console.log('Fetched Orders with Shipments:', ordersWithShipments);
 
             setOrders(ordersWithShipments);
         } catch (error) {
@@ -70,28 +73,60 @@ const Orders = () => {
 
     const handleUpdateStatus = async (orderId) => {
         try {
-            await axios.put(`${ip}/shipafrik/orders/${orderId}/status`, { status: newStatus });
-            toast.success('Order status updated successfully!');
-            setShowStatusModal(false);
-            fetchOrders();
+          // Update the order status
+          await axios.put(`${ip}/shipafrik/orders/${orderId}/status`, { status: newStatus });
+          toast.success('Order status updated successfully!');
+      
+          if (newStatus === 'Items Collected') {
+            // Fetch user details (shipper's details) based on userId from selected order
+            try {
+              const userResponse = await axios.get(`${ip}/shipafrik/user/${selectedOrder.shipment.userId}`);
+              const userDetails = userResponse.data; // Shipper's information
+              console.log('User Details: ', userDetails);
+      
+              // Send email to the user notifying them their shipment has been collected
+              const emailResponse = await axios.post(`${ip}/shipafrik/send-collection-notification`, {
+                userEmail: selectedOrder.contactEmail, // Customer's email
+                shipperName: `${userDetails.firstName} ${userDetails.lastName}`, // Shipper's full name
+                shipmentDetails: {
+                  description: selectedOrder.description, // Shipment description
+                  orderReference: selectedOrder.orderReference, // Order reference
+                },
+                userFullName: selectedOrder.customerName, // Customer's full name
+              });
+      
+              console.log('Collection email response:', emailResponse.data);
+            } catch (error) {
+              console.error('Error fetching user or sending collection email:', error);
+            }
+          }
+      
+          // Close the status modal and refresh orders
+          setShowStatusModal(false);
+          setNewStatus(null);
+          fetchOrders();
         } catch (error) {
-            // console.error('Error updating status:', error);
-            toast.error('Failed to update order status');
+          toast.error('Failed to update order status');
         }
-    };
+      };
+      
+
+    const handleStatusChange = async (newStatus) => {
+        setNewStatus(newStatus);
+      };
+      
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         return date.toLocaleDateString('en-US', options);
     };
-
     const filteredOrders = Array.isArray(orders)
         ? orders.filter(order =>
             order.orderReference.toLowerCase().includes(searchTerm.toLowerCase())
         ) : [];
 
-    // Separate orders by status: In Progress and Shipped
+    // Separate orders by status: In Progress, Shipped, and Collected
     const inProgressOrders = filteredOrders.filter(order => order.status === 'In Progress');
     const shippedOrders = filteredOrders.filter(order =>
         order.status === 'Shipped' ||
@@ -99,6 +134,7 @@ const Orders = () => {
         order.status === 'Shipment Has Landed in Ghana' ||
         order.status === 'Shipment Delivered'
     );
+    const collectedOrders = filteredOrders.filter(order => order.status === 'Items Collected');
 
     // Sort In Progress Orders
     const sortInProgressOrders = (orders) => {
@@ -152,6 +188,27 @@ const Orders = () => {
         }
     };
 
+    // Sort Collected Orders
+    const sortCollectedOrders = (orders) => {
+        const sortedOrders = [...orders];
+        switch (sortOrderCollected) {
+            case 'orderRefAsc':
+                return sortedOrders.sort((a, b) => a.orderReference.localeCompare(b.orderReference));
+            case 'orderRefDesc':
+                return sortedOrders.sort((a, b) => b.orderReference.localeCompare(a.orderReference));
+            case 'collectionDateAsc':
+                return sortedOrders.sort((a, b) => new Date(a.collectionDate) - new Date(b.collectionDate));
+            case 'collectionDateDesc':
+                return sortedOrders.sort((a, b) => new Date(b.collectionDate) - new Date(a.collectionDate));
+            case 'revenueGeneratedAsc':
+                return sortedOrders.sort((a, b) => a.grandTotal - b.grandTotal);
+            case 'revenueGeneratedDesc':
+                return sortedOrders.sort((a, b) => b.grandTotal - a.grandTotal);
+            default:
+                return sortedOrders;
+        }
+    };
+
     // Filter In Progress Orders
     const filteredInProgressOrders = inProgressOrders.filter(order => {
         const isServiceTypeMatch = filterServiceType ? order.quotes[0].serviceType === filterServiceType : true;
@@ -162,13 +219,24 @@ const Orders = () => {
         return isServiceTypeMatch && isPlannedDateMatch && isPickupLocationMatch && isRevenueMatch;
     });
 
+    // Filter Shipped Orders
     const filteredShippedOrders = shippedOrders; // You can apply similar filtering for shipped orders as needed
+
+    // Filter Collected Orders
+    const filteredCollectedOrders = collectedOrders.filter(order => {
+        const isServiceTypeMatch = filterServiceType ? order.quotes[0].serviceType === filterServiceType : true;
+        const isRevenueMatch = order.grandTotal >= filterRevenueRange[0] && order.grandTotal <= filterRevenueRange[1];
+
+        return isServiceTypeMatch && isRevenueMatch;
+    });
 
     const sortedInProgressOrders = sortInProgressOrders(filteredInProgressOrders);
     const sortedShippedOrders = sortShippedOrders(filteredShippedOrders);
+    const sortedCollectedOrders = sortCollectedOrders(filteredCollectedOrders);
 
     const inProgressCount = sortedInProgressOrders.length;
     const shippedCount = sortedShippedOrders.length;
+    const collectedCount = sortedCollectedOrders.length;
 
     // Pagination logic for In Progress Orders
     const indexOfLastInProgressOrder = currentPageInProgress * itemsPerPage;
@@ -180,8 +248,14 @@ const Orders = () => {
     const indexOfFirstShippedOrder = indexOfLastShippedOrder - itemsPerPage;
     const currentShippedOrders = sortedShippedOrders.slice(indexOfFirstShippedOrder, indexOfLastShippedOrder);
 
+    // Pagination logic for Collected Orders
+    const indexOfLastCollectedOrder = currentPageCollected * itemsPerPage;
+    const indexOfFirstCollectedOrder = indexOfLastCollectedOrder - itemsPerPage;
+    const currentCollectedOrders = sortedCollectedOrders.slice(indexOfFirstCollectedOrder, indexOfLastCollectedOrder);
+
     const totalPagesInProgress = Math.ceil(sortedInProgressOrders.length / itemsPerPage);
     const totalPagesShipped = Math.ceil(sortedShippedOrders.length / itemsPerPage);
+    const totalPagesCollected = Math.ceil(sortedCollectedOrders.length / itemsPerPage);
 
     const totalRevenue = orders.reduce((accumulator, order) => {
         return accumulator + (order.grandTotal || 0);
@@ -194,6 +268,11 @@ const Orders = () => {
     const handlePageChangeShipped = (pageNumber) => {
         setCurrentPageShipped(pageNumber);
     };
+
+    const handlePageChangeCollected = (pageNumber) => {
+        setCurrentPageCollected(pageNumber);
+    };
+
 
     return (
         <>
@@ -315,7 +394,7 @@ const Orders = () => {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="7" style={{ textAlign: 'center' }}>No InProgress orders found</td>
+                                                <td colSpan="7" style={{ textAlign: 'center' }}>No orders in-progress found</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -341,6 +420,121 @@ const Orders = () => {
                             </div>
                         </div>
                     </div>
+
+                    {/* Collected Orders Table */}
+                    <div className="row">
+                        <div className="col-xl-12">
+                            <div className="card-body pt-3">
+                                <h5 className="card-title text-start"><strong>Orders - Collected</strong></h5>
+
+                                {/* Filter and Sort Options */}
+                                <div className="row mb-3 align-items-end justify-content-end">
+                                    <div className="col-sm-6 d-flex align-items-center">
+                                        <label htmlFor="sortBy" className="col-form-label me-2">Sort By:</label>
+                                        <i className="bi bi-arrow-down-up me-2" style={{ fontSize: '1.2em', color: '#007bff' }}></i>
+                                        <select
+                                            id="sortBy"
+                                            className='form-control w-50'
+                                            value={sortCollectedOrders}
+                                            onChange={(e) => setSortOrderCollected(e.target.value)}
+                                        >
+                                            <option value="orderRefAsc">Order Reference (A to Z)</option>
+                                            <option value="orderRefDesc">Order Reference (Z to A)</option>
+                                            <option value="serviceType">Type of Service</option>
+                                            <option value="plannedDateAsc">Planned Date (Earliest to Latest)</option>
+                                            <option value="plannedDateDesc">Planned Date (Latest to Earliest)</option>
+                                            <option value="revenueAsc">Revenue (Low to High)</option>
+                                            <option value="revenueDesc">Revenue (High to Low)</option>
+
+                                        </select>
+                                    </div>
+
+                                    <div className="col-sm-6 d-flex align-items-center">
+                                        <label htmlFor="serviceType" className="col-form-label me-2">Filter By:</label>
+                                        <i className="bi bi-tags me-2" style={{ fontSize: '1.2em', color: '#007bff' }}></i>
+                                        <select
+                                            id="serviceType"
+                                            className='form-control w-50'
+                                            value={filterServiceType}
+                                            onChange={(e) => setFilterServiceType(e.target.value)}
+                                        >
+                                            <option value="">All</option>
+                                            <option value="Warehouse to Door">Warehouse to Door</option>
+                                            <option value="Door to Door">Door to Door</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+
+                                <table className="table table-hover table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Order Reference</th>
+                                            <th>Customer Name</th>
+                                            <th>Type of Service</th>
+                                            <th>Planned Date</th>
+                                            <th>Pick up Location</th>
+                                            <th>Revenue Generated</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {currentCollectedOrders.length > 0 ? (
+                                            currentCollectedOrders.map((order) => (
+                                                <tr key={order._id}>
+                                                    <td>{order.orderReference}</td>
+                                                    <td>{order.customerName}</td>
+                                                    <td>
+                                                        <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
+                                                            {order.quote[0].serviceType.map((serviceType, index) => (
+                                                                <li key={index}>{serviceType}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </td>
+                                                    <td>{formatDate(order.preferredCollectionDate)}</td>
+                                                    <td>{order.pickupAddress}</td>
+                                                    <td>£{order.grandTotal}</td>
+                                                    <td>
+                                                        <i
+                                                            type="button"
+                                                            className="bi bi-eye-fill"
+                                                            style={{ color: 'blue' }}
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#viewOrders"
+                                                            onClick={() => handleViewOrders(order)}
+                                                        ></i>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="7" style={{ textAlign: 'center' }}>No collected orders found</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+
+                                </table>
+
+                                {/* Pagination Controls for Items Collected */}
+                                <nav aria-label="Items Collected Pagination">
+                                    <ul className="pagination justify-content-center">
+                                        <li className={`page-item ${currentPageCollected === 1 ? 'disabled' : ''}`}>
+                                            <button className="page-link" onClick={() => handlePageChangeCollected(currentPageCollected - 1)}>&laquo; Previous</button>
+                                        </li>
+                                        {Array.from({ length: totalPagesCollected }, (_, index) => (
+                                            <li className={`page-item ${currentPageCollected === index + 1 ? 'active' : ''}`} key={index}>
+                                                <button className="page-link" onClick={() => handlePageChangeCollected(index + 1)}>{index + 1}</button>
+                                            </li>
+                                        ))}
+                                        <li className={`page-item ${currentPageCollected === totalPagesCollected ? 'disabled' : ''}`}>
+                                            <button className="page-link" onClick={() => handlePageChangeCollected(currentPageCollected + 1)}>Next &raquo;</button>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+
 
                     {/* Shipped Orders Table */}
                     <div className="row">
@@ -525,10 +719,11 @@ const Orders = () => {
                                                 id="statusSelect"
                                                 className="form-select"
                                                 value={newStatus}
-                                                onChange={(e) => setNewStatus(e.target.value)}
-                                            >
+                                                onChange={(e) => handleStatusChange(e.target.value)}
+                                                >
                                                 <option value="">Select New Status</option>
                                                 <option value="In Progress">In Progress</option>
+                                                <option value="Items Collected">Items Collected</option>
                                                 <option value="Shipped">Shipped</option>
                                                 <option value="Shipment Has Left the Dock">Shipment Has Left the Dock</option>
                                                 <option value="Shipment Has Landed in Ghana">Shipment Has Landed in Ghana</option>

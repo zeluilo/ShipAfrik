@@ -2,6 +2,18 @@ const express = require('express');
 const router = express.Router();
 const Shipment = require('../model/Shipment'); // Adjust the path if necessary
 const Quote = require('../model/Quote');
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'princezel18@gmail.com',
+      pass: 'alio oear rwrg rxei'
+    },
+    tls: {
+      rejectUnauthorized: false // Allow self-signed certificates
+    }
+  });
 
 // Route to create a new shipment
 router.post('/create-shipment', async (req, res) => {
@@ -14,7 +26,9 @@ router.post('/create-shipment', async (req, res) => {
             warehousePostcode,
             doorToDoorFee,
             pickupRadius,
-            boxSizes,
+            volumetricWeightDivider,
+            price,
+            fragileFee,            
             userId,
             availableCollectionDays,
             latestDropOffDate,
@@ -32,7 +46,9 @@ router.post('/create-shipment', async (req, res) => {
             warehousePostcode,
             doorToDoorFee,
             pickupRadius,
-            boxSizes,
+            volumetricWeightDivider,
+            price,
+            fragileFee,             
             userId,
             availableCollectionDays,
             latestDropOffDate,
@@ -67,7 +83,9 @@ router.put('/update-shipment/:id', async (req, res) => {
             warehousePostcode,
             doorToDoorFee,
             pickupRadius,
-            boxSizes,
+            volumetricWeightDivider,
+            price,
+            fragileFee,            
             datePosted,
             availableCollectionDays,
             latestDropOffDate,
@@ -86,7 +104,9 @@ router.put('/update-shipment/:id', async (req, res) => {
                 warehousePostcode,
                 doorToDoorFee,
                 pickupRadius,
-                boxSizes,
+                volumetricWeightDivider,
+                price,
+                fragileFee,                
                 datePosted,
                 availableCollectionDays,
                 latestDropOffDate
@@ -326,6 +346,44 @@ router.put('/update-shipment-withdraw/:id', async (req, res) => {
         res.status(500).json({ message: 'Error updating shipment withdraw status', error });
     }
 });
+
+router.post('/send-collection-notification', async (req, res) => {
+    const { userEmail, shipperName, shipmentDetails, userFullName } = req.body;
+    console.log('Receieved : ', req.body)
+    // Construct the email content
+    const mailOptions = {
+      from: 'princezel18@gmail.com',
+      to: userEmail,
+      subject: `Your Shipment Has Been Collected!`,
+      text: `Dear ${userFullName},
+  
+Congratulations! Your shipment has been collected by ${shipperName} and is now in transit. 
+
+If you have any problems with this shipment, please don't hesitate to reach out to us.
+
+We would love to hear from you! Rate your pickup experience here!
+
+Shipment Details:
+1. Order Reference: ${shipmentDetails.orderReference}
+2. Description: ${shipmentDetails.description}
+
+Thank you for choosing ShipAfrik!
+
+Best regards,
+HR Team
+ShipAfrik`,
+    };
+  
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log('Collection email sent successfully');
+      res.status(200).json({ message: 'Collection notification email sent successfully' });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      res.status(500).json({ error: 'Failed to send collection notification email' });
+    }
+  });
+  
 
 // Route to delete a quote
 router.delete('/delete-quote/:id', async (req, res) => {

@@ -1,8 +1,12 @@
 const mongoose = require('mongoose');
 
+// Updated boxSizeSchema to remove quantity and include weight, height, length, width, and fragile
 const boxSizeSchema = new mongoose.Schema({
-    size: { type: String, required: true },
-    quantity: { type: Number, required: true }
+    weight: { type: Number, required: true },           
+    height: { type: Number, required: true }, 
+    length: { type: Number, required: true }, 
+    width: { type: Number, required: true },
+    fragile: { type: Boolean, required: true } 
 });
 
 const quoteSchema = new mongoose.Schema({

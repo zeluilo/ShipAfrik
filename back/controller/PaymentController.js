@@ -78,96 +78,80 @@ Universe`
   });
 };
 
-router.post('/send-confirmation-email', async (req, res) => {
-  const { userEmail, planName, planPrice, userFullName, userUiD, userId } = req.body;
+// Route to send payment confirmation email to shipper
+router.post('/send-payment-confirmation', async (req, res) => {
+  const { userEmail, shipperEmail, shipmentDetails, userFullName, shipperFullName } = req.body;
 
   // Get current date in UTC
   const currentDate = new Date();
 
-  // Calculate ContractStart and ContractEnd dates
-  const contractStart = new Date(currentDate);
-  const contractEnd = new Date(currentDate);
-  contractEnd.setDate(contractEnd.getDate() + 30);
-
-  // Format ContractStart and ContractEnd to specific format
-  const formattedContractStart = formatDate(contractStart);
-  const formattedContractEnd = formatDate(contractEnd);
-
-  const mailOptions = {
+  // Construct the email content for the user
+  const userMailOptions = {
     from: 'princezel18@gmail.com',
     to: userEmail,
-    subject: `Universe: ${planName} Subscription Payment Confirmation`,
+    subject: `Shipment Payment Confirmation`,
     text: `Dear ${userFullName},
 
 We hope this message finds you well.
 
-This email is to confirm that we have successfully received your recent subscription payment for our services at Universe. 
+This email is to confirm that we have successfully received the payment for your shipment. 
 
-We greatly appreciate your continued support and trust in our offerings.
+We greatly appreciate your continued support and trust in our services.
 
-Contact Details:
+Shipment Details:
+1. Shipment ID: ${shipmentDetails.id}
+2. Description: ${shipmentDetails.description}
+3. Total Amount Paid: £${shipmentDetails.amount}
+4. Order Reference: ${shipmentDetails.orderReference}
 
-1. Contract Name: ${planName} Subscription
-2. Contract Terminates: ${formattedContractEnd}
+If you have any questions regarding your shipment or if there's anything else we can assist you with, please do not hesitate to reach out to our customer support team.
 
-If you have any questions regarding your subscription or if there's anything else we can assist you with, please do not hesitate to reach out to our customer support team at sayituniverse@gmail.com.
-
-Thank you once again for choosing Universe. We look forward to serving you and ensuring that you have a seamless experience with us.
+Thank you once again for choosing ShipAfrik. We look forward to serving you and ensuring that you have a seamless experience with us.
 
 Best regards,
 
 HR Team
-Universe`
+ShipAfrik`
+  };
+
+  // Construct the email content for the shipper
+  const shipperMailOptions = {
+    from: 'princezel18@gmail.com',
+    to: shipperEmail,
+    subject: `Shipment Purchased Notification`,
+    text: `Dear ${shipperFullName},
+
+We are pleased to inform you that your shipment has been purchased. Below are the details of the shipment.
+
+Order Details:
+1. Shipment ID: ${shipmentDetails.id}
+2. Description: ${shipmentDetails.description}
+3. Total Amount Paid: £${shipmentDetails.amount}
+4. Order Reference: ${shipmentDetails.orderReference}
+
+We are processing this shipment and will keep you updated as things progress.
+
+If you have any questions or need further assistance, please feel free to contact our support team.
+
+Best regards,
+
+HR Team
+ShipAfrik`
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    // Send the email to the user
+    await transporter.sendMail(userMailOptions);
+    console.log('Payment confirmation email sent to user');
 
-    // Add details to Firestore PaymentMd collection
-    const paymentDetails = {
-      ContractEnd: formattedContractEnd,
-      ContractStart: formattedContractStart,
-      DateCreate: currentDate.toISOString(),
-      PaymentPlan: planName,
-      PaymentPrice: planPrice,
-      UserId: userId,
-      UserEmail: userEmail
-    };
+    // Send the email to the shipper
+    await transporter.sendMail(shipperMailOptions);
+    console.log('Shipment purchase email sent to shipper');
 
-    // Add document to PaymentMd collection
-    const docRef = await db.collection('PaymentMD').add(paymentDetails);
-
-    // Add docID to paymentDetails object
-    paymentDetails.docID = docRef.id;
-
-    // Update the document with docID in Firestore
-    await db.collection('PaymentMD').doc(docRef.id).set(paymentDetails, { merge: true });
-
-    console.log('Document added with ID: ', docRef.id);
-
-    console.log('Email Sent Successfully');
-
-    if (planName === 'LandLord Plan') {
-      await db.collection('UserMD').doc(userId).update({
-        UserAccountType: 4
-      });
-      console.log(`UserAccountType updated to 4 for user ${userFullName} with UiD: ${userUiD}, Plan: ${planName}`);
-    }
-
-    // Check if planName contains "Verification" and update Verified field in UserMd collection
-    if (planName.includes('Verification')) {
-      await db.collection('UserMD').doc(userId).update({
-        Verified: true
-      });
-      console.log(`User ${userFullName} with UiD: ${userUiD} verified successfully.`);
-    }
-
-    // scheduleEmail(userEmail, contractEnd, formattedContractEnd, planName, userFullName);
-
-    res.status(200).json({ message: 'Email confirmation sent successfully' });
+    res.status(200).json({ message: 'Emails sent successfully' });
   } catch (error) {
     console.error('Error sending email:', error);
-    res.status(500).json({ error: 'Failed to send email confirmation' });
+    res.status(500).json({ error: 'Failed to send emails' });
   }
 });
 
@@ -291,7 +275,7 @@ router.put('/orders/:orderId/status', async (req, res) => {
     const { status } = req.body;
 
     // Validate the status value
-    const validStatuses = ['In Progress', 'Shipped', 'Shipment Has Left the Dock', 'Shipment Has Landed in Ghana', 'Shipment Delivered'];
+    const validStatuses = ['In Progress', 'Items Collected', 'Shipped', 'Shipment Has Left the Dock', 'Shipment Has Landed in Ghana', 'Shipment Delivered'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Invalid status value' });
     }

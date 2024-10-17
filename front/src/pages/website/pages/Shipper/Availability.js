@@ -17,11 +17,9 @@ const Availability = () => {
         doorToDoorFee: '',
         pickupRadius: '',
         latestDropOffDate: '',
-        boxSizes: [
-            { size: 'Standard', price: '', quantity: '' },
-            { size: 'Medium', price: '', quantity: '' },
-            { size: 'Large', price: '', quantity: '' },
-        ],
+        volumetricWeightDivider: '',
+        price: '',
+        fragileFee: '',
         availableCollectionDays: [],
         withdraw: false
     });
@@ -133,11 +131,9 @@ const Availability = () => {
             doorToDoorFee: '',
             pickupRadius: '',
             latestDropOffDate: '',
-            boxSizes: [
-                { size: 'Standard', price: '', quantity: '' },
-                { size: 'Medium', price: '', quantity: '' },
-                { size: 'Large', price: '', quantity: '' },
-            ],
+            volumetricWeightDivider: '',
+            price: '',
+            fragileFee: '',
             availableCollectionDays: [],
         });
         setSelectedItem(null);
@@ -291,7 +287,9 @@ const Availability = () => {
                 warehousePostcode: response.data.warehousePostcode,
                 doorToDoorFee: response.data.doorToDoorFee,
                 pickupRadius: response.data.pickupRadius,
-                boxSizes: response.data.boxSizes,
+                volumetricWeightDivider: response.data.volumetricWeightDivider,
+                fragileFee: response.data.fragileFee,
+                price: response.data.price,
                 availableCollectionDays: response.data.availableCollectionDays.map(date => new Date(date)),
             });
             setIsDoorToDoorChecked(response.data.doorToDoorChecked);
@@ -466,9 +464,10 @@ const Availability = () => {
                                         <tr>
                                             <th>Shipment ID</th>
                                             <th onClick={() => setSortBy('estimatedVesselDepartureDate')}>Estimated Departure Date</th>
-                                            <th>Standard</th>
-                                            <th>Medium</th>
-                                            <th>Large</th>
+                                            <th>Estimated Arrival Date</th>
+                                            <th>Fragile Fee</th>
+                                            <th>Weight Divider</th>
+                                            <th>Price</th>
                                             <th>Action</th>
                                             <th>Withdrawn</th>
                                         </tr>
@@ -483,9 +482,10 @@ const Availability = () => {
                                                 <tr key={shipment._id}>
                                                     <td>{(index + 1) + (page - 1) * pageSize}</td>
                                                     <td>{formatDateToWords(shipment.estimatedVesselDepartureDate)}</td>
-                                                    <td>£{standardBox.price || '-'} ({standardBox.quantity || '-'})</td>
-                                                    <td>£{mediumBox.price || '-'} ({mediumBox.quantity || '-'})</td>
-                                                    <td>£{largeBox.price || '-'} ({largeBox.quantity || '-'})</td>
+                                                    <td>{formatDateToWords(shipment.estimatedArrivalDate)}</td>
+                                                    <td>£{shipment.fragileFee}</td>
+                                                    <td>£{shipment.price}</td>
+                                                    <td>£{shipment.volumetricWeightDivider}</td>
                                                     <td>
                                                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
                                                             <div>
@@ -671,37 +671,51 @@ const Availability = () => {
                                                 </tr>
                                             </>
                                         )}
-
-
-
-
                                     </tbody>
-
                                 </table>
                             </div>
                             <div className="col-xl-6">
-                                <table className="table table-spacing">
-                                    <thead>
-                                        <tr>
-                                            <th>Box Size</th>
-                                            <th>Pricing</th>
-                                            <th>Available Quantity</th>
-                                        </tr>
-                                    </thead>
+                                <table className="table table-spacing table-borderedless">
+                                <thread>
+                                        <tr></tr>
+                                    </thread>
                                     <tbody>
-                                        {formData.boxSizes.map((box, index) => (
-                                            <tr key={index}>
-                                                <td>{box.size}</td>
-                                                <td>
-                                                    <input type="number" className="form-control" placeholder={`Enter ${box.size} Price`}
-                                                        value={box.price} onChange={(e) => handleBoxSizeChange(index, 'price', e.target.value)} />
-                                                </td>
-                                                <td>
-                                                    <input type="number" className="form-control" placeholder={`Enter ${box.size} Quantity`}
-                                                        value={box.quantity} onChange={(e) => handleBoxSizeChange(index, 'quantity', e.target.value)} />
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        <tr>
+                                            <td><label>Fragile Fee</label></td>
+                                            <td><input
+                                                type="text"
+                                                name="fragileFee"
+                                                className="form-control"
+                                                value={formData.fragileFee}
+                                                onChange={handleChange}
+                                                placeholder="Enter fragile Fee"
+                                                required
+                                            /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><label>Volumentric Weight Divider</label></td>
+                                            <td><input
+                                                type="text"
+                                                name="volumetricWeightDivider"
+                                                className="form-control"
+                                                value={formData.volumetricWeightDivider}
+                                                onChange={handleChange}
+                                                placeholder="Enter Volumetric Weight Divider"
+                                                required
+                                            /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><label>Price</label></td>
+                                            <td><input
+                                                type="text"
+                                                name="price"
+                                                className="form-control"
+                                                value={formData.price}
+                                                onChange={handleChange}
+                                                placeholder="Enter Price"
+                                                required
+                                            /></td>
+                                        </tr>
                                     </tbody>
                                 </table>
                                 <table className="table table-borderless">
@@ -825,18 +839,21 @@ const Availability = () => {
                                             <td>£{shipment.doorToDoorFee || 'N/A'}</td>
                                         </tr>
                                         <tr>
-                                            <td><strong>Pickup Radius:</strong></td>
-                                            <td>{shipment.pickupRadius || 'N/A'}</td>
+                                            <td><strong>Fragile Fee:</strong></td>
+                                            <td>£{shipment.fragileFee || 'N/A'}</td>
+                                        </tr>
+                                        
+                                        <tr>
+                                            <td><strong>Price:</strong></td>
+                                            <td>£{shipment.price || 'N/A'}</td>
                                         </tr>
                                         <tr>
-                                            <td><strong>Available Box Sizes:</strong></td>
-                                            <td>
-                                                <ul>
-                                                    {shipment.boxSizes && shipment.boxSizes.map((box, index) => (
-                                                        <li key={index}>{box.size}: <br /> Price - £{box.price || 'N/A'}<br />Quantity - {box.quantity || 'N/A'}<br /><br /></li>
-                                                    ))}
-                                                </ul>
-                                            </td>
+                                            <td><strong>Volumentric Weight Divider:</strong></td>
+                                            <td>{shipment.volumetricWeightDivider || 'N/A'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Pickup Radius:</strong></td>
+                                            <td>{shipment.pickupRadius || 'N/A'}</td>
                                         </tr>
                                         <tr>
                                             <td><strong>Available Collection Days:</strong></td>

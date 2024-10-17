@@ -19,7 +19,9 @@ const shipmentSchema = new mongoose.Schema({
   },
   availableCollectionDays: [String],
   latestdropoffDays: [String],
-  boxSizes: [boxSizeSchema],
+  volumetricWeightDivider: String,
+  price: String,
+  fragileFee: String,  
   datePosted: {
     type: Date,
   },

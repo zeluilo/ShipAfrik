@@ -23,7 +23,7 @@ const OrderConfirmation = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { order } = location.state || {};
-    // console.log('Orders:', order);
+    console.log('Orders:', order);
 
     return (
         <section id="constructions" className="constructions section bg-dark min-vh-100 d-flex" style={{ textAlign: 'center' }}>
@@ -90,37 +90,21 @@ const OrderConfirmation = () => {
                                                 <tbody>
                                                     <tr>
                                                         <td>Full Name</td>
-                                                        {/* <td><input
-                                                            type="text"
-                                                            className="form-control"
-                                                            // placeholder="Enter full name"
-                                                        /></td> */}
+                                                        <td>
+                                                        {order.customerName}
+                                                        </td>
                                                     </tr>
                                                     <tr>
                                                         <td>Pickup Address</td>
-                                                        {/* <td><input
-                                                            type="text"
-                                                            className="form-control"
-                                                            // placeholder="Enter pickup address"
-                                                        /></td> */}
+                                                        <td>{order.pickupAddress}</td>
                                                     </tr>
                                                     <tr>
                                                         <td>Contact Phone</td>
-                                                        {/* <td><input
-                                                            type="tel"
-                                                            className="form-control"
-                                                            // placeholder="Enter phone number"
-                                                        /></td> */}
+                                                        <td>{order.contactPhone}</td>
                                                     </tr>
                                                     <tr>
                                                         <td>Contact E-mail</td>
-                                                        {/* <td><input
-                                                            type="email"
-                                                            className="form-control"
-                                                            // placeholder="Enter email"
-                                                            // value={contactEmail}
-                                                            // onChange={(e) => setContactEmail(e.target.value)}
-                                                        /></td> */}
+                                                        <td>{order.contactEmail}</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -129,25 +113,19 @@ const OrderConfirmation = () => {
                                             <h5><strong>Destination Details</strong></h5>
                                             <table className="table table-borderless table-sm">
                                                 <tbody>
-                                                    <tr>
+                                                    {/* <tr>
                                                         <td>Full Name</td>
-                                                        {/* <td><input
+                                                        <td><input
                                                             type="text"
                                                             className="form-control"
                                                             // placeholder="Enter full name"
                                                             // value={customerName}
                                                             // onChange={(e) => setCustomerName(e.target.value)}
-                                                        /></td> */}
-                                                    </tr>
+                                                        /></td>
+                                                    </tr> */}
                                                     <tr>
                                                         <td>Drop-off Address</td>
-                                                        {/* <td><input
-                                                            type="text"
-                                                            className="form-control"
-                                                            // placeholder="Enter drop-off address"
-                                                            // value={dropoffAddress}
-                                                            // onChange={(e) => setDropoffAddress(e.target.value)}
-                                                        /></td> */}
+                                                        <td>{order.dropoffAddress}  </td>
                                                     </tr>
                                                     <tr>
                                                         <td>Contact Phone</td>

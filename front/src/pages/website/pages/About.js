@@ -6,6 +6,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
 import { ip } from "../../constants";
+import { FaPlus, FaMinus } from 'react-icons/fa'; // Import Font Awesome icons
 
 const About = () => {
   const { isLoggedIn, currentUser } = useAuth();
@@ -13,11 +14,6 @@ const About = () => {
   const location = useLocation();
 
   const [formData, setFormData] = useState({
-    boxSizes: [
-      { size: 'Standard', quantity: '' },
-      { size: 'Medium', quantity: '' },
-      { size: 'Large', quantity: '' },
-    ],
     serviceType: [],
     pickupPostcode: '',
     destinationCity: '',
@@ -77,12 +73,6 @@ const About = () => {
     setFormData(prevData => ({ ...prevData, [field]: date }));
   };
 
-  const handleBoxSizeChange = (index, field, value) => {
-    const newBoxSizes = [...formData.boxSizes];
-    newBoxSizes[index][field] = value;
-    setFormData(prevData => ({ ...prevData, boxSizes: newBoxSizes }));
-  };
-
   // Postcode Lookup
   const postCodeLookUp = async () => {
     setPostcodeError('');
@@ -115,9 +105,21 @@ const About = () => {
         return;
       }
     }
-
-    const payload = { ...formData, userId: currentUser };
+    // Prepare the rows (items) data
+    const items = rows.map(row => ({
+      weight: row.weight,
+      length: row.length,
+      height: row.height,
+      width: row.width,
+      fragile: row.fragile
+  }));
+ 
     if (isLoggedIn) {
+      const payload = {
+        ...formData,
+        userId: currentUser,
+        items: rows
+      };   
       try {
         const response = await axios.post(`${ip}/shipafrik/create-quote`, payload, {
           headers: { 'Content-Type': 'application/json' }
@@ -133,6 +135,10 @@ const About = () => {
         toast.error('Failed to submit quote request.');
       }
     } else {
+      const dataToStore = {
+        ...formData,
+        items // Add the items to form data
+    };
       // Clear the form data from localStorage
       localStorage.removeItem('quoteFormData');
       
@@ -149,18 +155,13 @@ const About = () => {
 
   const resetForm = () => {
     setFormData({
-      boxSizes: [
-        { size: 'Small', quantity: '' },
-        { size: 'Medium', quantity: '' },
-        { size: 'Large', quantity: '' },
-        { size: 'Standard Barrel', quantity: '' },
-      ],
       serviceType: [],
       pickupPostcode: '',
       destinationCity: '',
       collectBy: '',
       arriveBy: '',
     });
+    setRows([{ weight: '', length: '', height: '', width: '', fragile: '' }]);
     setPostcodeDetails({ region: '', country: '' });
   };
 
@@ -188,178 +189,257 @@ const About = () => {
     }
   };
 
+  const [rows, setRows] = useState([
+    { weight: '', length: '', height: '', width: '', fragile: '' }
+  ]);
+
+  const handleRowChange = (index, field, value) => {
+    const updatedRows = [...rows];
+    updatedRows[index][field] = value;
+    setRows(updatedRows);
+  };
+
+  const handleAddRow = () => {
+    setRows([...rows, { weight: '', length: '', height: '', width: '', fragile: '' }]);
+  };
+
+  const handleDeleteRow = (index) => {
+    const updatedRows = rows.filter((row, i) => i !== index);
+    setRows(updatedRows);
+  };
+
   return (
     <section id="get-started" className="get-started section">
       <div className="container">
-        <div className="row justify-content-between gy-4">
-          <div className="col-lg-12 content" data-aos="zoom-out" data-aos-delay="200">
-            <h3 className='my-0'>Ship To Accra From London</h3>
-            <form onSubmit={handleSubmit} className="php-email-form">
-              <p>Fill out the form below to get a customized shipping quote. Our team will get back to you with detailed information and options tailored to your needs.</p>
-              <div className="row">
-                <div className="col-xl-12">
-                  <table className="table table-borderless table-striped mb-4">
-                    <tbody>
-                      <tr>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <label htmlFor="collectBy" className="me-2">Collect by:</label>
-                            <DatePicker
-                              className="form-control"
-                              id="collectBy"
-                              selected={formData.collectBy ? new Date(formData.collectBy) : null}
-                              dateFormat="yyyy/MM/dd"
-                              onChange={date => handleDateChange('collectBy', date)}
-                              minDate={new Date()}
-                              placeholderText="Select collection date"
-                              required
-                            />
-                          </div>
-                        </td>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <label htmlFor="arriveBy" className="me-2">Arrive by:</label>
-                            <DatePicker
-                              className="form-control"
-                              id="arriveBy"
-                              selected={formData.arriveBy ? new Date(formData.arriveBy) : null}
-                              dateFormat="yyyy/MM/dd"
-                              onChange={date => handleDateChange('arriveBy', date)}
-                              minDate={formData.collectBy ? new Date(formData.collectBy) : new Date()}
-                              placeholderText="Select arrival date"
-                              required
-                            />
-                          </div>
-                        </td>
-                        <td>
-                          <div className="d-flex flex-column">
-                            <label htmlFor="serviceType" className="mb-2">Type of Service:</label>
-                            <div className="form-control" onClick={toggleOptions} style={{ cursor: 'pointer', border: '1px solid #ccc', padding: '10px', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-                              <span>{formData.serviceType.length > 0 ? formData.serviceType.join(', ') : 'Select Service Type'}</span>
-                            </div>
-                            {showOptions && (
-                              <div className="dropdown-menu show" style={{ position: 'absolute', zIndex: 1000, backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '5px', marginTop: '80px', padding: '10px' }}>
-                                {serviceTypes.length > 0 ? (
-                                  serviceTypes.map((type, index) => (
-                                    <div key={index} className="form-check">
-                                      <input
-                                        type="checkbox"
-                                        id={`serviceType${index}`}
-                                        name="serviceType"
-                                        value={type.name}
-                                        className="form-check-input"
-                                        checked={formData.serviceType.includes(type.name)}
-                                        onChange={handleChange}
-                                      />
-                                      <label htmlFor={`serviceType${index}`} className="form-check-label">
-                                        {type.name}
-                                      </label>
-                                    </div>
-                                  ))
-                                ) : (
-                                  <p>No service types available.</p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <label htmlFor="pickupPostcode" className="me-2">Pickup Postcode:</label>
-                            <input
-                              type="text"
-                              id="pickupPostcode"
-                              name="pickupPostcode"
-                              className="form-control w-50"
-                              placeholder="Enter postcode"
-                              value={formData.pickupPostcode}
-                              onChange={handleChange}
-                              required
-                            />
-                            <button type="button" className="btn btn-secondary ms-2" onClick={postCodeLookUp}>Postcode</button>
-                          </div>
-                          {/* Display the region and country if found */}
-                          {postcodeDetails.region && (
-                            <div className="mt-2">
-                              <strong>Region:</strong> {postcodeDetails.region} <br />
-                              <strong>Country:</strong> {postcodeDetails.country}
-                            </div>
-                          )}
-
-                          {postcodeSuccess && (
-                            <div className="mt-2 text-success">
-                              {postcodeSuccess}
-                            </div>
-                          )}
-
-                          {/* Display error message if postcode lookup fails */}
-                          {postcodeError && (
-                            <div className="mt-2 text-danger">
-                              {postcodeError}
-                            </div>
-                          )}
-                        </td>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <label htmlFor="destinationCity" className="me-2">Destination City:</label>
-                            <select
-                              id="destinationCity"
-                              className="form-control w-75"
-                              value={formData.destinationCity}
-                              onChange={handleChange}
-                              name="destinationCity"
-                              required
-                            >
-                              <option value="">Select destination city</option>
-                              {data.map((option, index) => (
-                                <option key={index} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                  {/* Table for Box Sizes */}
-                  <div className="col-xl-6">
-                    <table className="table table-borderless table-striped">
-                      <thead>
-                        <tr>
-                          <th>Your Shipment</th>
-                          <th>Quantity</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {formData.boxSizes.map((box, index) => (
-                          <tr key={index}>
-                            <td>{box.size}</td>
-                            <td>
-                              <input
-                                type="number"
-                                className="form-control"
-                                placeholder={`Enter ${box.size} Quantity`}
-                                value={box.quantity}
-                                onChange={(e) => handleBoxSizeChange(index, 'quantity', e.target.value)}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="col-xl-12 text-center">
-                    <button type="submit" className="btn btn-primary mt-3">Compare Quotes</button>
-                  </div>
+        <div className="row justify-content-between">
+          <div className="col-lg-12 content p-3" data-aos="zoom-out" data-aos-delay="200">
+            <h3 className='my-3'>Ship To Accra From London</h3>
+            <form onSubmit={handleSubmit}>
+  <p>Fill out the form below to get a customized shipping quote. Our team will get back to you with detailed information and options tailored to your needs.</p>
+  
+  <div className="row">
+    {/* First Row */}
+    <div className="col-md-4">
+      <div className="mb-3">
+        <label htmlFor="collectBy" className="form-label">Collect by:</label>
+        <div className="d-flex">
+        <DatePicker
+          className="form-control"
+          selected={formData.collectBy ? new Date(formData.collectBy) : null}
+          dateFormat="yyyy/MM/dd"
+          onChange={(date) => handleDateChange('collectBy', date)}
+          minDate={new Date()}
+          placeholderText="Select collection date"
+          required
+        />
+        </div>
+      </div>
+    </div>
+    
+    <div className="col-md-4">
+      <div className="mb-3">
+        <label htmlFor="arriveBy" className="form-label">Arrive by:</label>
+        <div className="d-flex">
+        <DatePicker
+          className="form-control"
+          id="arriveBy"
+          selected={formData.arriveBy ? new Date(formData.arriveBy) : null}
+          dateFormat="yyyy/MM/dd"
+          onChange={(date) => handleDateChange('arriveBy', date)}
+          minDate={formData.collectBy ? new Date(formData.collectBy) : new Date()}
+          placeholderText="Select arrival date"
+          required
+        />
+        </div>
+      </div>
+    </div>
+    
+    <div className="col-md-4">
+      <div className="mb-3">
+        <label htmlFor="serviceType" className="form-label">Type of Service:</label>
+        <div className="form-control" onClick={toggleOptions} style={{ cursor: 'pointer', border: '1px solid #ccc', padding: '10px', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+          <span>{formData.serviceType.length > 0 ? formData.serviceType.join(', ') : 'Select Service Type'}</span>
+        </div>
+        {showOptions && (
+          <div className="dropdown-menu show" style={{ position: 'absolute', zIndex: 1000, backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '5px', padding: '10px' }}>
+            {serviceTypes.length > 0 ? (
+              serviceTypes.map((type, index) => (
+                <div key={index} className="form-check">
+                  <input
+                    type="checkbox"
+                    id={`serviceType${index}`}
+                    name="serviceType"
+                    value={type.name}
+                    className="form-check-input"
+                    checked={formData.serviceType.includes(type.name)}
+                    onChange={handleChange}
+                  />
+                  <label htmlFor={`serviceType${index}`} className="form-check-label">
+                    {type.name}
+                  </label>
                 </div>
-              </div>
-            </form>
+              ))
+            ) : (
+              <p>No service types available.</p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+  
+  {/* Second Row */}
+  <div className="row">
+    <div className="col-md-4">
+      <div className="mb-3">
+        <label htmlFor="pickupPostcode" className="form-label">Pickup Postcode:</label>
+        <div className="d-flex">
+          <input
+            type="text"
+            id="pickupPostcode"
+            name="pickupPostcode"
+            className="form-control"
+            placeholder="Enter postcode"
+            value={formData.pickupPostcode}
+            onChange={handleChange}
+            required
+          />
+          <button type="button" className="btn btn-secondary ms-2" onClick={postCodeLookUp}>Postcode</button>
+        </div>
+        {/* Region and Country Display */}
+        {postcodeDetails.region && (
+          <div className="mt-2">
+            <strong>Region:</strong> {postcodeDetails.region} <br />
+            <strong>Country:</strong> {postcodeDetails.country}
+          </div>
+        )}
+        {/* Postcode lookup messages */}
+        {postcodeSuccess && (
+          <div className="mt-2 text-success">{postcodeSuccess}</div>
+        )}
+        {postcodeError && (
+          <div className="mt-2 text-danger">{postcodeError}</div>
+        )}
+      </div>
+    </div>
+    
+    <div className="col-md-4">
+      <div className="mb-3">
+        <label htmlFor="destinationCity" className="form-label">Destination City:</label>
+        <select
+          id="destinationCity"
+          className="form-control"
+          value={formData.destinationCity}
+          onChange={handleChange}
+          name="destinationCity"
+          required
+        >
+          <option value="">Select destination city</option>
+          {data.map((option, index) => (
+            <option key={index} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div className="row">
+      <div className="col-md-12">
+        <div className="table-responsive">
+          <table className="table table-bordered">
+            <thead>
+              <tr>
+                <th>Weight (kg)</th>
+                <th>Length (cm)</th>
+                <th>Height (cm)</th>
+                <th>Width (cm)</th>
+                <th>Fragile</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, index) => (
+                <tr key={index}>
+                  <td>
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="Enter weight"
+                      value={row.weight}
+                      onChange={(e) => handleRowChange(index, 'weight', e.target.value)}
+                      required
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="Enter length"
+                      value={row.length}
+                      onChange={(e) => handleRowChange(index, 'length', e.target.value)}
+                      required
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="Enter height"
+                      value={row.height}
+                      onChange={(e) => handleRowChange(index, 'height', e.target.value)}
+                      required
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="Enter width"
+                      value={row.width}
+                      onChange={(e) => handleRowChange(index, 'width', e.target.value)}
+                      required
+                    />
+                  </td>
+                  <td>
+                    <select
+                      className="form-control"
+                      value={row.fragile}
+                      onChange={(e) => handleRowChange(index, 'fragile', e.target.value)}
+                      required
+                    >
+                      <option value="">Select</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={() => handleDeleteRow(index)}
+                    >
+                      <FaMinus />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button type="button" className="btn btn-success" onClick={handleAddRow}>
+          <FaPlus className="text-center m-2"/>Add Row
+          </button>
+        </div>
+      </div>
+</div>
+
+  
+  <div className="text-center">
+    <button type="submit" className="btn btn-warning mt-3">Compare Quotes</button>
+  </div>
+</form>
+
           </div>
         </div>
       </div>

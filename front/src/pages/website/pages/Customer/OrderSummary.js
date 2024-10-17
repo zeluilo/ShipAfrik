@@ -23,10 +23,11 @@ const OrderSummary = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { selectedShipment, quote } = location.state || {};
-    // console.log('Selected Shipment:', selectedShipment);
+    console.log('Selected Shipment:', selectedShipment);
     // console.log('Quotes:', quote);
     const [loading, setLoading] = useState(true);
     const [shipmentDetails, setShipmentDetails] = useState(null);
+    const [user, setUserDetails] = useState(null);
     const [preferredDate, setPreferredDate] = useState(null);
     const [grandTotal, setGrandTotal] = useState(0);
 
@@ -43,7 +44,7 @@ const OrderSummary = () => {
 
     // Stripe hooks
     const stripe = useStripe();
-    const elements = useElements();
+    const elements = useElements(); 
 
     useEffect(() => {
         const fetchShipment = async () => {
@@ -52,7 +53,14 @@ const OrderSummary = () => {
                 if (selectedShipment) {
                     const response = await axios.get(`${ip}/shipafrik/get-shipment/${selectedShipment}`);
                     const shipmentDetails = response.data;
+                    console.log('Shipment Details: ', shipmentDetails)
                     setShipmentDetails(shipmentDetails);
+
+                    const userResponse = await axios.get(`${ip}/shipafrik/user/${shipmentDetails.userId}`);
+                    const userDetails = userResponse.data;
+                    console.log('User Details: ', userDetails);
+                    setUserDetails(userDetails)
+
                 }
             } catch (error) {
                 // console.error('Error fetching shipment details:', error);
@@ -69,15 +77,16 @@ const OrderSummary = () => {
             const quoteSizes = Array.isArray(quote)
                 ? quote.map(q => q.boxSizes).flat()
                 : quote.boxSizes || [];
-
+    
             const total = shipmentDetails.boxSizes.reduce((total, box) => {
                 return total + (box.price * (quoteSizes.find(q => q.size === box.size)?.quantity || 0));
-            }, 0);
-
+            }, 0) + (parseFloat(shipmentDetails.doorToDoorFee) || 0); // Ensure that doorToDoorFee is treated as a number
+    
             setGrandTotal(total);
         }
-    }, [shipmentDetails, quote]); // Calculate grand total whenever shipmentDetails or quotes change
+    }, [shipmentDetails, quote]);
 
+    // Calculate grand total whenever shipmentDetails or quotes change
     const handlePaymentOrder = async () => {
         if (!stripe || !elements) {
             toast.error('Stripe is not ready');
@@ -169,9 +178,21 @@ const OrderSummary = () => {
                 }
 
                 if (confirmedPaymentIntent.status === 'succeeded') {
-                    // console.log('Payment succeeded:', confirmedPaymentIntent);
-                    // console.log('Order placed successfully:', order);
                     toast.success('Payment successful and order placed!');
+                    // Send confirmation email to the shipper after successful payment
+                    const emailResponse = await axios.post(`${ip}/shipafrik/send-payment-confirmation`, {
+                        userEmail: contactEmail, // Customer's email
+                        shipperEmail: user.email, // Shipper's email (from user object)
+                        shipmentDetails: {
+                          description: 'Your shipment description here',
+                          email: user.email, // Shipper's email (from user object)
+                          amount: grandTotal, // Total amount paid
+                          orderReference: order.orderReference // Order reference
+                        },
+                        userFullName: customerName, // Customer's full name
+                        shipperFullName: `${user.firstName} ${user.lastName}`, // Shipper's full name (from user object)
+                      });
+                      console.log('Email response:', emailResponse.data);                      
                     navigate('/order-confirmation', { state: { order } });
                 }
             } else {
