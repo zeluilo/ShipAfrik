@@ -466,18 +466,14 @@ const Availability = () => {
                                             <th onClick={() => setSortBy('estimatedVesselDepartureDate')}>Estimated Departure Date</th>
                                             <th>Estimated Arrival Date</th>
                                             <th>Fragile Fee</th>
-                                            <th>Weight Divider</th>
                                             <th>Price</th>
+                                            <th>Weight Divider</th>
                                             <th>Action</th>
                                             <th>Withdrawn</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {filteredShipments.slice((page - 1) * pageSize, page * pageSize).map((shipment, index) => {
-                                            const standardBox = shipment.boxSizes.find(box => box.size === 'Standard') || {};
-                                            const mediumBox = shipment.boxSizes.find(box => box.size === 'Medium') || {};
-                                            const largeBox = shipment.boxSizes.find(box => box.size === 'Large') || {};
-
                                             return (
                                                 <tr key={shipment._id}>
                                                     <td>{(index + 1) + (page - 1) * pageSize}</td>
@@ -485,7 +481,7 @@ const Availability = () => {
                                                     <td>{formatDateToWords(shipment.estimatedArrivalDate)}</td>
                                                     <td>£{shipment.fragileFee}</td>
                                                     <td>£{shipment.price}</td>
-                                                    <td>£{shipment.volumetricWeightDivider}</td>
+                                                    <td>{shipment.volumetricWeightDivider}</td>
                                                     <td>
                                                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
                                                             <div>
@@ -646,7 +642,7 @@ const Availability = () => {
                                         {isDoorToDoorChecked && (
                                             <>
                                                 <tr>
-                                                    <td><label>Door to Door Fee</label></td>
+                                                    <td><label>Door to Door Fee (per order)</label></td>
                                                     <td><input
                                                         type="text"
                                                         name="doorToDoorFee"
@@ -681,7 +677,7 @@ const Availability = () => {
                                     </thread>
                                     <tbody>
                                         <tr>
-                                            <td><label>Fragile Fee</label></td>
+                                            <td><label>Fragile Fee (per item)</label></td>
                                             <td><input
                                                 type="text"
                                                 name="fragileFee"
@@ -705,7 +701,7 @@ const Availability = () => {
                                             /></td>
                                         </tr>
                                         <tr>
-                                            <td><label>Price</label></td>
+                                            <td><label>Price (per kg)</label></td>
                                             <td><input
                                                 type="text"
                                                 name="price"

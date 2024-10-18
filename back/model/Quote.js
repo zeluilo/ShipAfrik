@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 // Updated boxSizeSchema to remove quantity and include weight, height, length, width, and fragile
-const boxSizeSchema = new mongoose.Schema({
+const itemSchema = new mongoose.Schema({
     weight: { type: Number, required: true },           
     height: { type: Number, required: true }, 
     length: { type: Number, required: true }, 
@@ -16,7 +16,7 @@ const quoteSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
-    boxSizes: [boxSizeSchema],
+    items: [itemSchema],
     dateCreated: { type: Date, default: Date.now },
     serviceType: [{ type: String, required: true }], // Changed to an array of strings
     pickupPostcode: { type: String, required: true }, // Added pickupPostcode field

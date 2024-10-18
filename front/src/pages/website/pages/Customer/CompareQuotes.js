@@ -59,11 +59,11 @@ const CompareQuotes = () => {
         }
     };
 
-    const handleBuyNow = () => {
-        // console.log('Navigating with shipment and quote data:', { selectedShipment, quote });
-        window.scrollTo(0, 0);
-        navigate('/order-summary', { state: { selectedShipment, quote } });
-    };
+    // const handleBuyNow = () => {
+    //     // console.log('Navigating with shipment and quote data:', { selectedShipment, quote });
+    //     window.scrollTo(0, 0);
+    //     navigate('/order-summary', { state: { selectedShipment, quote } });
+    // };
 
     const formatDateToWords = (dateString) => {
         const date = new Date(dateString);
@@ -94,7 +94,7 @@ const CompareQuotes = () => {
                                             selectedShipment={selectedShipment}
                                             showDetails={showDetails}
                                             handleViewShipmentDetails={handleViewShipmentDetails}
-                                            handleBuyNow={handleBuyNow}
+                                            // handleBuyNow={handleBuyNow}
                                             quotes={quote}
                                             formatDateToWords={formatDateToWords}
                                         />

@@ -139,16 +139,17 @@ const About = () => {
         ...formData,
         items // Add the items to form data
     };
+    console.log('Data Store: ', dataToStore);
       // Clear the form data from localStorage
       localStorage.removeItem('quoteFormData');
       
       // Update localStorage with the new formData
-      localStorage.setItem('quoteFormData', JSON.stringify(formData));
+      localStorage.setItem('quoteFormData', JSON.stringify(dataToStore));
       
       toast.success('Quote details stored successfully in local storage!');
       
       // Clear the form data after saving to localStorage
-      resetForm();  // This function will reset the form fields
+      // resetForm();  // This function will reset the form fields
       navigate('/compare-quotes');
     }
   };

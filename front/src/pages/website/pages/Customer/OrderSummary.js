@@ -22,15 +22,15 @@ const OrderSummary = () => {
 
     const location = useLocation();
     const navigate = useNavigate();
-    const { selectedShipment, quote } = location.state || {};
-    console.log('Selected Shipment:', selectedShipment);
+    const { selectedShipment, newQuote } = location.state || {};
+    console.log('New quote:', newQuote);
     // console.log('Quotes:', quote);
     const [loading, setLoading] = useState(true);
     const [shipmentDetails, setShipmentDetails] = useState(null);
     const [user, setUserDetails] = useState(null);
     const [preferredDate, setPreferredDate] = useState(null);
     const [grandTotal, setGrandTotal] = useState(0);
-
+    const [separateQuotes, setSeparatedQuotes] = useState(null);
     // Customer details state
     const [customerName, setCustomerName] = useState('');
     const [pickupAddress, setPickupAddress] = useState('');
@@ -71,20 +71,6 @@ const OrderSummary = () => {
 
         fetchShipment();
     }, [selectedShipment]);
-
-    useEffect(() => {
-        if (shipmentDetails && quote) {
-            const quoteSizes = Array.isArray(quote)
-                ? quote.map(q => q.boxSizes).flat()
-                : quote.boxSizes || [];
-    
-            const total = shipmentDetails.boxSizes.reduce((total, box) => {
-                return total + (box.price * (quoteSizes.find(q => q.size === box.size)?.quantity || 0));
-            }, 0) + (parseFloat(shipmentDetails.doorToDoorFee) || 0); // Ensure that doorToDoorFee is treated as a number
-    
-            setGrandTotal(total);
-        }
-    }, [shipmentDetails, quote]);
 
     // Calculate grand total whenever shipmentDetails or quotes change
     const handlePaymentOrder = async () => {
@@ -139,7 +125,7 @@ const OrderSummary = () => {
                 contactPhone,
                 contactEmail,
                 dropoffAddress,
-                quote,
+                quote: newQuote,
                 shipmentId: shipmentDetails._id,
                 preferredDate,
                 grandTotal,
@@ -223,32 +209,29 @@ const OrderSummary = () => {
                                         <table className="table table-borderless mt-3 table-lg h-75" style={{ border: '1px solid black' }}>
                                             <thead>
                                                 <tr>
-                                                    <th>Box Size</th>
-                                                    <th>Price (£)</th>
-                                                    <th>Requested Quantity</th>
-                                                    <th>Total (£)</th>
+                                                    {newQuote.highestCosts.map((item, idx) => {
+                                                        <th>{`Item ${(idx + 1)}`}</th>
+                                                    })}
+                                                    {/* {separateQuotes[index].items.map((item, itemIndex) => (
+                                                    <th key={`item-${itemIndex}`}>{`Item ${itemIndex + 1}`}</th>
+                                                    ))} */}
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {shipmentDetails && shipmentDetails.boxSizes && quote ? (
+                                                {shipmentDetails && newQuote ? (
                                                     <>
-                                                        {shipmentDetails.boxSizes.map((box, index) => {
-                                                            const quoteSizes = Array.isArray(quote)
-                                                                ? quote.map(q => q.boxSizes).flat()
-                                                                : quote.boxSizes || [];
-
-                                                            const boxInQuote = quoteSizes.find(b => b.size === box.size);
-                                                            const requestedQuantity = boxInQuote ? boxInQuote.quantity : 0;
-
+                                                        {newQuote.highestCosts.map((price, index) => {
                                                             return (
                                                                 <tr key={index}>
-                                                                    <td>{box.size || '-'}</td>
-                                                                    <td>£{box.price || '-'}</td>
-                                                                    <td>{requestedQuantity || '-'}</td>
-                                                                    <td>£{(box.price && requestedQuantity) ? (box.price * requestedQuantity).toFixed(2) : '-'}</td>
+                                                                    <td colSpan="2">{`Item ${(index + 1)}`} </td>
+                                                                    <td colSpan="2">£{price || 0}</td>
                                                                 </tr>
                                                             );
                                                         })}
+                                                        <tr>
+                                                            <td colSpan="2">{newQuote.serviceType}</td>
+                                                            <td colSpan="2">£{newQuote.doorFee}</td>
+                                                        </tr>
                                                         <tr>
                                                             <td colSpan="2">Preferred Collection Date</td>
                                                             <td colSpan="2">
@@ -268,7 +251,7 @@ const OrderSummary = () => {
                                                         <tr style={{ border: '1px solid black' }}>
                                                             <td colSpan="3"><strong>Grand Total</strong></td>
                                                             <td>
-                                                                <strong>£{grandTotal}</strong>
+                                                                <strong>£{newQuote.totalCost}</strong>
                                                             </td>
                                                         </tr>
                                                     </>
