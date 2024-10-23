@@ -24,7 +24,7 @@ const OrderSummary = () => {
     const navigate = useNavigate();
     const { selectedShipment, newQuote } = location.state || {};
     console.log('New quote:', newQuote);
-    // console.log('Quotes:', quote);
+    console.log('selectedShipment:', selectedShipment);
     const [loading, setLoading] = useState(true);
     const [shipmentDetails, setShipmentDetails] = useState(null);
     const [user, setUserDetails] = useState(null);
@@ -128,7 +128,7 @@ const OrderSummary = () => {
                 quote: newQuote,
                 shipmentId: shipmentDetails._id,
                 preferredDate,
-                grandTotal,
+                grandTotal: newQuote.totalCost,
                 status: 'In Progress',
             };
             // console.log('Order Data:', orderData);
@@ -229,7 +229,7 @@ const OrderSummary = () => {
                                                             );
                                                         })}
                                                         <tr>
-                                                            <td colSpan="2">{newQuote.serviceType}</td>
+                                                            <td colSpan="2">{newQuote.shipment.serviceType}</td>
                                                             <td colSpan="2">£{newQuote.doorFee}</td>
                                                         </tr>
                                                         <tr>
@@ -445,7 +445,7 @@ const OrderSummary = () => {
 
                             <div className="d-flex justify-content-between mt-3">
                                 <span><strong>Grand Total:</strong></span>
-                                <span className="h5">£{grandTotal.toFixed(2)}</span>
+                                <span className="h5">£{newQuote.totalCost.toFixed(2)}</span>
                             </div>
 
                             <div className="mt-4">

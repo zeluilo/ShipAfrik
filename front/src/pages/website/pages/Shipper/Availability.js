@@ -4,6 +4,8 @@ import { useAuth } from "../../../../components/Context";
 import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import MultiDatePicker from "react-multi-date-picker";
+import "react-multi-date-picker/styles/colors/purple.css";
 import { toast } from 'react-toastify';
 import { ip } from "../../../constants";
 
@@ -20,6 +22,7 @@ const Availability = () => {
         volumetricWeightDivider: '',
         price: '',
         fragileFee: '',
+        warehouseToDoorFee: '',
         availableCollectionDays: [],
         withdraw: false
     });
@@ -40,8 +43,6 @@ const Availability = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prevData => ({ ...prevData, [name]: value }));
-        // setSearchTerm(e.target.value);
-
     };
 
     const handleBoxSizeChange = (index, field, value) => {
@@ -51,7 +52,10 @@ const Availability = () => {
     };
 
     const handleDateChange = (dates) => {
-        setFormData(prevData => ({ ...prevData, availableCollectionDays: dates }));
+        setFormData(prevData => ({
+            ...prevData,
+            availableCollectionDays: dates
+        }));
     };
 
     const handleSubmit = async (e, isPost = false) => {
@@ -74,13 +78,38 @@ const Availability = () => {
         let latestDropOffDate = new Date(estimatedDepartureDate);
         latestDropOffDate.setDate(estimatedDepartureDate.getDate() + 2);
 
+
+        // Initialize serviceType as an array
+        let serviceType = [];
+
+        // If both fees (doorToDoorFee and warehouseToDoorFee) are empty or zero, set 'Warehouse to Warehouse'
+        if (!formData.doorToDoorFee && !formData.warehouseToDoorFee) {
+            serviceType.push('Warehouse to Warehouse');
+        }
+
+        // Check if doorToDoorFee is not empty or zero
+        if (formData.doorToDoorFee && formData.doorToDoorFee !== 0) {
+            serviceType.push('Door to Door');
+        }
+
+        // Check if warehouseToDoorFee is not empty or zero
+        if (formData.warehouseToDoorFee && formData.warehouseToDoorFee !== 0) {
+            serviceType.push('Warehouse to Door');
+        }
+
+        // Format selected dates to 'YYYY-MM-DD'
+        const formattedCollectionDays = selectedDates.map(date => {
+            return new Date(date).toISOString().split('T')[0]; // Format each date as 'YYYY-MM-DD'
+        });
+
         let payload = {
             ...formData,
             userId: currentUser,
             doorToDoorChecked: isDoorToDoorChecked,
-            availableCollectionDays: formData.availableCollectionDays.map(date => date.toISOString().split('T')[0]),
+            availableCollectionDays: formattedCollectionDays,
             withdraw: isWithdrawn,
-            latestDropOffDate: latestDropOffDate.toISOString().split('T')[0] // Format to YYYY-MM-DD
+            latestDropOffDate: latestDropOffDate.toISOString().split('T')[0],
+            serviceType
         };
 
         if (isPost) {
@@ -134,6 +163,7 @@ const Availability = () => {
             volumetricWeightDivider: '',
             price: '',
             fragileFee: '',
+            warehouseToDoorFee: '',
             availableCollectionDays: [],
         });
         setSelectedItem(null);
@@ -157,7 +187,7 @@ const Availability = () => {
     const [data, setData] = useState([]);
     const [search, setSearch] = useState('');
     const [selectedItem, setSelectedItem] = useState('');
-    const [departureDate, setDepartureDate] = useState('')
+    const [selectedDates, setSelectedDates] = useState([]);
 
     // Fetch shipments initially
     const fetchShipments = async () => {
@@ -289,6 +319,7 @@ const Availability = () => {
                 pickupRadius: response.data.pickupRadius,
                 volumetricWeightDivider: response.data.volumetricWeightDivider,
                 fragileFee: response.data.fragileFee,
+                warehouseToDoorFee: response.data.warehouseToDoorFee,
                 price: response.data.price,
                 availableCollectionDays: response.data.availableCollectionDays.map(date => new Date(date)),
             });
@@ -626,6 +657,23 @@ const Availability = () => {
                                             </td>
                                         </tr>
 
+                                        {isWareHousePostcode && (
+                                            <>
+                                                <tr>
+                                                    <td><label>WareHouse to Door Fee (per order)</label></td>
+                                                    <td><input
+                                                        type="number"
+                                                        name="warehouseToDoorFee"
+                                                        className="form-control"
+                                                        value={formData.warehouseToDoorFee}
+                                                        onChange={handleChange}
+                                                        placeholder="Enter warehouse to door fee"
+                                                        required
+                                                    /></td>
+                                                </tr>
+                                            </>
+                                        )}
+
                                         <tr>
                                             <td>
                                                 <input
@@ -639,12 +687,25 @@ const Availability = () => {
                                             </td>
                                         </tr>
 
+                                        <tr>
+                                            <td>
+                                                <input
+                                                    className="form-check-input mx-2"
+                                                    type="checkbox"
+                                                    name="wareHousePostcode"
+                                                    checked={isWareHousePostcode}
+                                                    onChange={handleCheckboxChange}
+                                                />
+                                                <label>WareHouse To Door</label>
+                                            </td>
+                                        </tr>
+
                                         {isDoorToDoorChecked && (
                                             <>
                                                 <tr>
                                                     <td><label>Door to Door Fee (per order)</label></td>
                                                     <td><input
-                                                        type="text"
+                                                        type="number"
                                                         name="doorToDoorFee"
                                                         className="form-control"
                                                         value={formData.doorToDoorFee}
@@ -667,19 +728,21 @@ const Availability = () => {
                                                 </tr>
                                             </>
                                         )}
+
+
                                     </tbody>
                                 </table>
                             </div>
                             <div className="col-xl-6">
                                 <table className="table table-spacing table-borderedless">
-                                <thread>
+                                    <thread>
                                         <tr></tr>
                                     </thread>
                                     <tbody>
                                         <tr>
                                             <td><label>Fragile Fee (per item)</label></td>
                                             <td><input
-                                                type="text"
+                                                type="number"
                                                 name="fragileFee"
                                                 className="form-control"
                                                 value={formData.fragileFee}
@@ -691,7 +754,7 @@ const Availability = () => {
                                         <tr>
                                             <td><label>Volumentric Weight Divider</label></td>
                                             <td><input
-                                                type="text"
+                                                type="number"
                                                 name="volumetricWeightDivider"
                                                 className="form-control"
                                                 value={formData.volumetricWeightDivider}
@@ -703,7 +766,7 @@ const Availability = () => {
                                         <tr>
                                             <td><label>Price (per kg)</label></td>
                                             <td><input
-                                                type="text"
+                                                type="number"
                                                 name="price"
                                                 className="form-control"
                                                 value={formData.price}
@@ -721,15 +784,13 @@ const Availability = () => {
                                                 <tr>
                                                     <td><p>Available Collection Days</p></td>
                                                     <td>
-                                                        <DatePicker
-                                                            selected={departureDate}
-                                                            onChange={handleDateChange}
-                                                            selectsRange
-                                                            startDate={formData.availableCollectionDays[0]}
-                                                            endDate={formData.availableCollectionDays[1]}
-                                                            inline
-                                                            // maxDate={formData.estimatedVesselDepartureDate ? new Date(formData.estimatedVesselDepartureDate) : new Date()}
-                                                            maxDate={formData.estimatedVesselDepartureDate ? new Date(new Date(formData.estimatedVesselDepartureDate).setDate(new Date(formData.estimatedVesselDepartureDate).getDate() - 3)) : new Date()}                                                            dateFormat="yyyy-MM-dd"
+                                                        <MultiDatePicker
+                                                            multiple // Enable multiple date selection
+                                                            value={selectedDates}
+                                                            onChange={setSelectedDates}
+                                                            maxDate={formData.estimatedVesselDepartureDate ? new Date(new Date(formData.estimatedVesselDepartureDate).setDate(new Date(formData.estimatedVesselDepartureDate).getDate() - 3)) : new Date()}
+                                                            format="YYYY-MM-DD"
+                                                            placeholder="Select collection days"
                                                         />
                                                     </td>
                                                 </tr>
@@ -744,7 +805,7 @@ const Availability = () => {
                                 <strong>Date Posted: </strong>{shipment && shipment.datePosted ? formatDateToWords(shipment.datePosted) : 'Not Posted Yet'}
                             </div>
                             <div className="col text-center">
-                            <button
+                                <button
                                     type="submit"
                                     className="btn btn-primary mx-2"
                                     style={{ width: '150px' }}
@@ -778,7 +839,7 @@ const Availability = () => {
                                     style={{ width: '150px' }}
                                     onClick={handleClear}
                                 >
-                                    Delete
+                                    Clear Entries
                                 </button>
                             </div>
                         </div>
@@ -835,10 +896,14 @@ const Availability = () => {
                                             <td>£{shipment.doorToDoorFee || 'N/A'}</td>
                                         </tr>
                                         <tr>
+                                            <td><strong>WareHouse to Door Fee:</strong></td>
+                                            <td>£{shipment.warehouseToDoorFee || 'N/A'}</td>
+                                        </tr>
+                                        <tr>
                                             <td><strong>Fragile Fee:</strong></td>
                                             <td>£{shipment.fragileFee || 'N/A'}</td>
                                         </tr>
-                                        
+
                                         <tr>
                                             <td><strong>Price:</strong></td>
                                             <td>£{shipment.price || 'N/A'}</td>
@@ -854,11 +919,11 @@ const Availability = () => {
                                         <tr>
                                             <td><strong>Available Collection Days:</strong></td>
                                             <td>
-                                                {shipment.availableCollectionDays && shipment.availableCollectionDays.length > 0 ? (
-                                                    `${new Date(shipment.availableCollectionDays[0]).toLocaleDateString()} - ${new Date(shipment.availableCollectionDays[shipment.availableCollectionDays.length - 1]).toLocaleDateString()}`
-                                                ) : (
-                                                    'No collection days available.'
-                                                )}
+                                                {shipment.availableCollectionDays.map((days, index) => (
+                                                    <div key={index}>
+                                                        {days}
+                                                    </div>
+                                                ))}
                                             </td>
                                         </tr>
 

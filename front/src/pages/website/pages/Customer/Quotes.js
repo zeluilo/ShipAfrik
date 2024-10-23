@@ -199,29 +199,6 @@ const Quotes = () => {
         return date.toLocaleDateString('en-US', options);
     };
 
-    const handleViewShipmentDetails = async (shipment) => {
-        try {
-            // Optionally, fetch additional details about the shipment if needed
-            const response = await axios.get(`${ip}/shipafrik/get-shipment/${shipment._id}`);
-            const shipmentDetails = response.data;
-            // Toggle details visibility based on current state
-            if (selectedShipment === shipment._id) {
-                // Hide details if the same shipment is clicked again
-                setSelectedShipment(null);
-                setShowDetails(false);
-            } else {
-                // Show details for the new shipment
-                setSelectedShipment(shipment._id);
-                setShowDetails(true);
-            }
-            // console.log('Selected Shipment:', shipmentDetails);
-
-        } catch (error) {
-            // console.error('Error fetching shipment details:', error);
-            // Handle the error (e.g., show an error message)
-        }
-    };
-
     const handleGridClick = () => {
         setShowCompareQuote(false);
         setShowDetails(false);
@@ -373,9 +350,9 @@ const Quotes = () => {
                                     <div className="m-3 text-danger"><strong>{noShipmentsMessage}</strong></div>
                                     <QuotesTable
                                         shipments={shipments}
-                                        selectedShipment={selectedShipment}
+                                        // selectedShipment={selectedShipment}
                                         showDetails={showDetails}
-                                        handleViewShipmentDetails={handleViewShipmentDetails}
+                                        // handleViewShipmentDetails={handleViewShipmentDetails}
                                         handleBuyNow={handleBuyNow}
                                         quotes={quote}
                                         formatDateToWords={formatDateToWords}

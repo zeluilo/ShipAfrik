@@ -12,16 +12,28 @@ const shipmentSchema = new mongoose.Schema({
   estimatedArrivalDate: Date,
   warehousePostcode: String,
   doorToDoorFee: String,
+  warehouseToDoorFee: String,
   pickupRadius: String,
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  availableCollectionDays: [String],
+  availableCollectionDays: {
+    type: [String], // This will be an array of strings
+    default: [], // Initialize with an empty array
+  },
   latestdropoffDays: [String],
   volumetricWeightDivider: String,
   price: String,
   fragileFee: String,  
+  doorToDoorFee: {
+    type: String,
+    default: '',
+  },
+  warehouseToDoorFee: {
+    type: String,
+    default: '',
+  },
   datePosted: {
     type: Date,
   },
@@ -35,6 +47,10 @@ const shipmentSchema = new mongoose.Schema({
   withdraw: {
     type: Boolean,
     default: false
+  },
+  serviceType: {
+    type: [String], // This will be an array of strings
+    default: [], // Initialize with an empty array
   }
 });
 

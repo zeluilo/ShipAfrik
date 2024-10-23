@@ -242,7 +242,7 @@ const Orders = () => {
     const indexOfLastInProgressOrder = currentPageInProgress * itemsPerPage;
     const indexOfFirstInProgressOrder = indexOfLastInProgressOrder - itemsPerPage;
     const currentInProgressOrders = sortedInProgressOrders.slice(indexOfFirstInProgressOrder, indexOfLastInProgressOrder);
-
+    console.log("Current In Progress Orders:", currentInProgressOrders);
     // Pagination logic for Shipped Orders
     const indexOfLastShippedOrder = currentPageShipped * itemsPerPage;
     const indexOfFirstShippedOrder = indexOfLastShippedOrder - itemsPerPage;
@@ -372,8 +372,8 @@ const Orders = () => {
                                                     <td>{order.customerName}</td>
                                                     <td>
                                                         <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
-                                                            {order.quote[0].serviceType.map((serviceType, index) => (
-                                                                <li key={index}>{serviceType}</li>
+                                                            {order.quote.map((quote, index) => (
+                                                                <li key={index}>{quote.shipment.serviceType}</li>
                                                             ))}
                                                         </ul>
                                                     </td>
@@ -486,8 +486,8 @@ const Orders = () => {
                                                     <td>{order.customerName}</td>
                                                     <td>
                                                         <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
-                                                            {order.quote[0].serviceType.map((serviceType, index) => (
-                                                                <li key={index}>{serviceType}</li>
+                                                            {order.quote.map((quote, index) => (
+                                                                <li key={index}>{quote.shipment.serviceType}</li>
                                                             ))}
                                                         </ul>
                                                     </td>
